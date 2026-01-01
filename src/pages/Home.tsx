@@ -101,7 +101,7 @@ export default function Home() {
                                     transition={{ duration: 2.5, repeat: Infinity, repeatDelay: 1, ease: "easeInOut" }}
                                     className="origin-bottom-right inline-block text-2xl md:text-3xl"
                                 >
-                                    👋
+                                
                                 </motion.div>
                                 <span className="text-xs font-bold text-primary uppercase tracking-wider mt-1">Hello, I'm</span>
                             </div>
