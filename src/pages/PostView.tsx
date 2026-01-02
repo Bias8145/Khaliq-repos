@@ -620,7 +620,7 @@ export default function PostView() {
                                                 <p className={cn(
                                                     "text-[8px] md:text-[10px] uppercase tracking-wider font-medium",
                                                     cardTheme === 'dark' ? "text-[#C4B59D]" : "text-[#52525B]"
-                                                )}>System Architecture</p>
+                                                )}>Writer & Meaning-seeker</p>
                                             </div>
                                         </div>
                                         
