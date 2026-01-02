@@ -411,7 +411,7 @@ export default function Home() {
                                             ? "bg-[#C4B59D]/10 text-[#C4B59D]" 
                                             : "bg-[#18181B] text-[#FAFAFA]"
                                     )}>
-                                        <Globe size={12} /> khaliq-repo.com
+                                        <Globe size={12} /> khaliq-repo.pages.dev
                                     </div>
                                 </div>
                             </div>
