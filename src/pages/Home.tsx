@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowRight, BookOpen, Layers, Terminal, User, GraduationCap, Github, Cpu, Database, Globe, Smartphone, ExternalLink, Feather, Share2, X, Layout, Sun, Moon, Maximize, Square, RefreshCw, Send, Loader2, Download, TrendingUp, Flame } from 'lucide-react';
+import { ArrowRight, BookOpen, Layers, Terminal, User, GraduationCap, Github, Cpu, Database, Globe, Smartphone, ExternalLink, Feather, Share2, X, Layout, Sun, Moon, Maximize, Square, RefreshCw, Send, Loader2, Download, TrendingUp, Flame, PenTool } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useLanguage } from '../lib/language';
 import { cn } from '../lib/utils';
@@ -9,6 +9,7 @@ import { useToast } from '../components/ui/Toast';
 import { supabase, type Post } from '../lib/supabase';
 
 type AspectRatio = 'auto' | 'portrait' | 'square' | 'story';
+type CardTheme = 'dark' | 'light';
 
 export default function Home() {
   const { t } = useLanguage();
@@ -16,8 +17,8 @@ export default function Home() {
   
   // Promote Modal State
   const [showPromoteModal, setShowPromoteModal] = useState(false);
-  const [cardTheme, setCardTheme] = useState<'dark' | 'light'>('dark');
   const [aspectRatio, setAspectRatio] = useState<AspectRatio>('auto');
+  const [cardTheme, setCardTheme] = useState<CardTheme>('dark');
   const [promoText, setPromoText] = useState(t('home.promote.defaultText'));
   const [generating, setGenerating] = useState(false);
   const cardRef = useRef<HTMLDivElement>(null);
@@ -39,17 +40,46 @@ export default function Home() {
     fetchTrending();
   }, []);
 
+  // ROBUST IMAGE GENERATION: CLONE & CAPTURE
   const generateImageBlob = async (): Promise<Blob | null> => {
     if (!cardRef.current) return null;
-    await new Promise(resolve => setTimeout(resolve, 100)); // Wait for render
-    const canvas = await html2canvas(cardRef.current, {
-        scale: 3,
-        backgroundColor: '#18181B', // Force dark background for consistency
-        useCORS: true,
-        logging: false,
-        allowTaint: true,
-    });
-    return new Promise(resolve => canvas.toBlob(resolve, 'image/png', 1.0));
+    
+    // 1. Clone the node to avoid messing with the UI
+    const clone = cardRef.current.cloneNode(true) as HTMLElement;
+    
+    // 2. Style the clone to be fixed width (Desktop Standard) and hidden
+    clone.style.position = 'fixed';
+    clone.style.top = '-9999px';
+    clone.style.left = '-9999px';
+    clone.style.width = '600px'; // Force 600px width for perfect layout
+    clone.style.height = 'auto'; // Let height adjust naturally
+    clone.style.zIndex = '-1';
+    clone.style.transform = 'none';
+    clone.style.borderRadius = '0'; // Optional: remove radius for cleaner edges in some viewers
+    
+    // Append to body so html2canvas can see it
+    document.body.appendChild(clone);
+
+    try {
+        // 3. Capture the clone
+        const canvas = await html2canvas(clone, {
+            scale: 2, // 2x scale = 1200px width (High Quality)
+            backgroundColor: cardTheme === 'dark' ? '#18181B' : '#FFFFFF',
+            useCORS: true,
+            logging: false,
+            allowTaint: true,
+            width: 600,
+            windowWidth: 1200, // Simulate desktop viewport
+        });
+
+        return new Promise(resolve => canvas.toBlob(resolve, 'image/png', 1.0));
+    } catch (err) {
+        console.error("Capture failed:", err);
+        return null;
+    } finally {
+        // 4. Clean up
+        document.body.removeChild(clone);
+    }
   };
 
   const handleDownloadCard = async () => {
@@ -109,7 +139,7 @@ export default function Home() {
   return (
     <div className="min-h-screen pt-24 md:pt-32 pb-16 px-5 md:px-8 max-w-6xl mx-auto">
       
-      {/* Hero Section - Redesigned (Elegant, Contained, No Underline) */}
+      {/* Hero Section */}
       <section className="mb-20 md:mb-28 text-center md:text-left relative">
         <motion.div 
           initial={{ opacity: 0, y: 20 }}
@@ -334,71 +364,102 @@ export default function Home() {
                                 </div>
                             </div>
 
-                            {/* Text Editor */}
-                            <div className="space-y-2">
-                                <div className="flex justify-between items-center">
-                                    <span className="text-xs font-bold uppercase text-muted-foreground">{t('home.promote.customize')}</span>
-                                    <button 
-                                        onClick={() => setPromoText(t('home.promote.defaultText'))}
-                                        className="text-[10px] font-bold text-muted-foreground flex items-center gap-1 hover:text-foreground"
-                                    >
-                                        <RefreshCw size={10} /> {t('post.reset')}
-                                    </button>
+                            {/* Theme & Text */}
+                            <div className="space-y-4">
+                                <div className="space-y-2">
+                                    <span className="text-xs font-bold uppercase text-muted-foreground flex items-center gap-2">
+                                        <Sun size={14} /> {t('post.cardTheme')}
+                                    </span>
+                                    <div className="flex bg-secondary rounded-lg p-1">
+                                        <button 
+                                            onClick={() => setCardTheme('dark')}
+                                            className={cn("flex-1 py-1.5 rounded-md text-xs font-bold transition-all flex items-center justify-center gap-2", cardTheme === 'dark' ? "bg-background shadow-sm text-primary" : "text-muted-foreground")}
+                                        >
+                                            <Moon size={12} /> Dark
+                                        </button>
+                                        <button 
+                                            onClick={() => setCardTheme('light')}
+                                            className={cn("flex-1 py-1.5 rounded-md text-xs font-bold transition-all flex items-center justify-center gap-2", cardTheme === 'light' ? "bg-background shadow-sm text-primary" : "text-muted-foreground")}
+                                        >
+                                            <Sun size={12} /> Light
+                                        </button>
+                                    </div>
                                 </div>
-                                <textarea 
-                                    value={promoText}
-                                    onChange={(e) => setPromoText(e.target.value)}
-                                    className="w-full bg-secondary/50 border border-transparent rounded-lg p-3 text-sm focus:ring-1 focus:ring-primary/20 focus:border-primary outline-none transition-all resize-none h-20"
-                                    placeholder="Enter your promotional message..."
-                                />
+
+                                <div className="space-y-2">
+                                    <div className="flex justify-between items-center">
+                                        <span className="text-xs font-bold uppercase text-muted-foreground">{t('home.promote.customize')}</span>
+                                        <button 
+                                            onClick={() => setPromoText(t('home.promote.defaultText'))}
+                                            className="text-[10px] font-bold text-muted-foreground flex items-center gap-1 hover:text-foreground"
+                                        >
+                                            <RefreshCw size={10} /> {t('post.reset')}
+                                        </button>
+                                    </div>
+                                    <textarea 
+                                        value={promoText}
+                                        onChange={(e) => setPromoText(e.target.value)}
+                                        className="w-full bg-secondary/50 border border-transparent rounded-lg p-3 text-sm focus:ring-1 focus:ring-primary/20 focus:border-primary outline-none transition-all resize-none h-16"
+                                        placeholder="Enter your promotional message..."
+                                    />
+                                </div>
                             </div>
                         </div>
                     </div>
 
-                    {/* REBUILT SHARE CARD - Matching Reference Image */}
+                    {/* REBUILT SHARE CARD - Material Minimalist */}
                     <div className="w-full flex justify-center mb-6">
                         <div 
                             ref={cardRef}
                             className={cn(
-                                "relative w-full flex flex-col items-center justify-center text-center overflow-hidden bg-[#18181B] text-white p-12",
+                                "relative w-full flex flex-col items-center justify-center text-center overflow-hidden p-12 transition-colors duration-300",
                                 aspectRatio === 'square' ? "aspect-square" : 
                                 aspectRatio === 'portrait' ? "aspect-[4/5]" : 
                                 aspectRatio === 'story' ? "aspect-[9/16]" : 
-                                "min-h-[500px] h-auto"
+                                "min-h-[500px] h-auto",
+                                cardTheme === 'dark' ? "bg-[#18181B] text-white" : "bg-white text-zinc-900"
                             )}
                             style={{ 
                                 borderRadius: '24px',
-                                border: '1px solid #27272A',
-                                boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)'
+                                border: cardTheme === 'dark' ? '1px solid #27272A' : '1px solid #E4E4E7',
+                                boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.15)'
                             }}
                         >
                             {/* Background Elements */}
-                            <div className="absolute inset-0 bg-gradient-to-b from-[#27272A] to-[#18181B] opacity-50"></div>
+                            <div className={cn("absolute inset-0 opacity-50", cardTheme === 'dark' ? "bg-gradient-to-b from-[#27272A] to-[#18181B]" : "bg-gradient-to-b from-gray-50 to-white")}></div>
+                            
+                            {/* Large Background Icon - Subtle & Elegant */}
+                            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 opacity-[0.03] pointer-events-none">
+                                <PenTool size={400} className={cn("rotate-[-10deg]", cardTheme === 'dark' ? "text-white" : "text-black")} />
+                            </div>
                             
                             {/* Top Feather Icon */}
-                            <div className="relative z-10 w-16 h-16 rounded-full border border-white/10 flex items-center justify-center mb-8 bg-white/5 backdrop-blur-sm">
-                                <Feather size={28} className="text-[#D4C5A9]" />
+                            <div className={cn(
+                                "relative z-10 w-16 h-16 rounded-full border flex items-center justify-center mb-8 backdrop-blur-sm",
+                                cardTheme === 'dark' ? "border-white/10 bg-white/5" : "border-black/5 bg-black/5"
+                            )}>
+                                <Feather size={28} className={cn(cardTheme === 'dark' ? "text-[#D4C5A9]" : "text-[#BFA170]")} />
                             </div>
 
                             {/* Main Title */}
-                            <h2 className="relative z-10 text-4xl md:text-5xl font-bold tracking-tight mb-2 text-white font-sans">
+                            <h2 className={cn("relative z-10 text-4xl md:text-5xl font-bold tracking-tight mb-2 font-sans", cardTheme === 'dark' ? "text-white" : "text-zinc-900")}>
                                 Bias Fajar Khaliq
                             </h2>
-                            <p className="relative z-10 text-xs font-bold tracking-[0.3em] text-[#D4C5A9] uppercase mb-12">
+                            <p className={cn("relative z-10 text-xs font-bold tracking-[0.3em] uppercase mb-12", cardTheme === 'dark' ? "text-[#D4C5A9]" : "text-[#BFA170]")}>
                                 Digital Garden & Archive
                             </p>
 
                             {/* Quote Section */}
                             <div className="relative z-10 max-w-lg mx-auto">
-                                <p className="text-lg md:text-xl leading-relaxed text-gray-300 font-serif italic">
+                                <p className={cn("text-lg md:text-xl leading-relaxed font-serif italic", cardTheme === 'dark' ? "text-gray-300" : "text-zinc-600")}>
                                     "{promoText}"
                                 </p>
                             </div>
 
                             {/* Footer / URL */}
-                            <div className="relative z-10 mt-16 pt-8 border-t border-white/10 w-full max-w-xs flex items-center justify-center gap-2">
-                                <Globe size={14} className="text-[#D4C5A9]" />
-                                <span className="text-xs font-bold tracking-widest text-[#D4C5A9] uppercase">
+                            <div className={cn("relative z-10 mt-16 pt-8 border-t w-full max-w-xs flex items-center justify-center gap-2", cardTheme === 'dark' ? "border-white/10" : "border-black/10")}>
+                                <Globe size={14} className={cn(cardTheme === 'dark' ? "text-[#D4C5A9]" : "text-[#BFA170]")} />
+                                <span className={cn("text-xs font-bold tracking-widest uppercase", cardTheme === 'dark' ? "text-[#D4C5A9]" : "text-[#BFA170]")}>
                                     khaliq-repos.pages.dev
                                 </span>
                             </div>

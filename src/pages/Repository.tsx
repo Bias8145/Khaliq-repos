@@ -2,11 +2,12 @@ import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { supabase, type Post } from '../lib/supabase';
 import { format } from 'date-fns';
-import { Eye, EyeOff, Plus, Search, ChevronRight, Filter, Layers, Trash2, Heart, Users, MousePointerClick, Cpu, Database, Sparkles, TrendingUp, BookOpen } from 'lucide-react';
+import { Eye, EyeOff, Plus, Search, ChevronRight, Filter, Layers, Trash2, Heart, Users, MousePointerClick, Cpu, Database, TrendingUp, BookOpen, Archive } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { cn } from '../lib/utils';
 import { useToast } from '../components/ui/Toast';
 import { useLanguage } from '../lib/language';
+import { ConfirmDialog } from '../components/ui/ConfirmDialog';
 
 export default function Repository() {
   const [posts, setPosts] = useState<Post[]>([]);
@@ -24,15 +25,17 @@ export default function Repository() {
   // System Health
   const [aiConfigured, setAiConfigured] = useState(false);
 
+  // Delete Dialog State
+  const [deleteId, setDeleteId] = useState<string | null>(null);
+
   const { toast } = useToast();
   const { t } = useLanguage();
 
   useEffect(() => {
     checkUser();
     fetchPosts();
-    fetchAnalytics(); // Fetch analytics for everyone
+    fetchAnalytics();
     
-    // Check if AI key is present in env
     const hasKey = import.meta.env.VITE_GEMINI_API_KEY && !import.meta.env.VITE_GEMINI_API_KEY.includes("YOUR_API_KEY");
     setAiConfigured(!!hasKey);
   }, []);
@@ -43,7 +46,6 @@ export default function Repository() {
   };
 
   const fetchAnalytics = async () => {
-    // Fetch Site Visits (Today)
     const { data: visits } = await supabase
         .from('site_visits')
         .select('count')
@@ -52,7 +54,6 @@ export default function Repository() {
     
     if (visits) setSiteVisits(visits.count);
 
-    // Fetch Aggregated Post Stats
     const { data: postsStats } = await supabase
         .from('posts')
         .select('view_count, likes');
@@ -85,23 +86,28 @@ export default function Repository() {
   };
 
   // Admin Actions
-  const handleDelete = async (e: React.MouseEvent, id: string) => {
-    e.preventDefault(); // Prevent link navigation
-    if (!window.confirm("Are you sure you want to delete this post? This cannot be undone.")) return;
+  const confirmDelete = (e: React.MouseEvent, id: string) => {
+    e.preventDefault();
+    setDeleteId(id);
+  };
+
+  const handleDelete = async () => {
+    if (!deleteId) return;
 
     try {
-        const { error } = await supabase.from('posts').delete().eq('id', id);
+        const { error } = await supabase.from('posts').delete().eq('id', deleteId);
         if (error) throw error;
         
         toast("Post deleted successfully", "success");
-        setPosts(posts.filter(p => p.id !== id));
+        setPosts(posts.filter(p => p.id !== deleteId));
+        setDeleteId(null);
     } catch (err: any) {
         toast("Failed to delete post", "error");
     }
   };
 
   const toggleVisibility = async (e: React.MouseEvent, post: Post) => {
-    e.preventDefault(); // Prevent link navigation
+    e.preventDefault();
     const newIsPublic = !post.is_public;
 
     try {
@@ -117,21 +123,22 @@ export default function Repository() {
             p.id === post.id ? { ...p, is_public: newIsPublic } : p
         );
         setPosts(updatedPosts);
+        setFilteredPosts(prev => prev.map(p => p.id === post.id ? { ...p, is_public: newIsPublic } : p));
+        
         toast(newIsPublic ? "Post is now Public" : "Post is now Private", "info");
-    } catch (err) {
-        toast("Failed to update visibility", "error");
+    } catch (err: any) {
+        console.error(err);
+        toast(`Failed to update visibility: ${err.message}`, "error");
     }
   };
 
   useEffect(() => {
     let filtered = posts;
     
-    // If not admin, only show public posts
     if (!isAdmin && !loading) {
         filtered = filtered.filter(p => p.is_public);
     }
 
-    // Tab Filter
     if (activeTab === 'Drafts') {
         filtered = filtered.filter(p => p.status === 'draft');
     } else if (activeTab !== 'All') {
@@ -178,7 +185,15 @@ export default function Repository() {
 
   return (
     <div className="min-h-screen pt-28 px-5 md:px-8 max-w-6xl mx-auto pb-20">
-      
+      <ConfirmDialog 
+        isOpen={!!deleteId}
+        title="Delete Post"
+        message="Are you sure you want to delete this post? This action cannot be undone and will remove all associated data."
+        confirmText="Delete"
+        onConfirm={handleDelete}
+        onCancel={() => setDeleteId(null)}
+      />
+
       {/* Dashboard Header */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-12">
         <div>
@@ -198,11 +213,10 @@ export default function Repository() {
         )}
       </div>
 
-      {/* Stats Grid - Logic Split for Public vs Admin */}
+      {/* Stats Grid */}
       <div className="space-y-6 mb-12">
-            {/* System Status Bar (Admin Only) */}
             {isAdmin && (
-                <div className="flex gap-4 overflow-x-auto pb-2">
+                <div className="flex gap-4 overflow-x-auto pb-2 mb-4">
                     <div className={cn("flex items-center gap-2 px-4 py-2 rounded-full text-xs font-bold border", aiConfigured ? "bg-emerald-500/10 text-emerald-600 border-emerald-500/20" : "bg-red-500/10 text-red-600 border-red-500/20")}>
                         <Cpu size={14} /> AI System: {aiConfigured ? "Online" : "Missing Key"}
                     </div>
@@ -214,37 +228,41 @@ export default function Repository() {
 
             <div className={cn("grid gap-4", isAdmin ? "grid-cols-1 md:grid-cols-2 lg:grid-cols-4" : "grid-cols-1")}>
                 
-                {/* Total Content - Visible to Everyone */}
-                <div className={cn(
-                    "bg-card p-6 rounded-[24px] border border-border shadow-sm hover:shadow-md transition-all relative overflow-hidden group",
-                    !isAdmin && "flex items-center justify-between md:justify-start gap-8" // Special layout for public single card
-                )}>
-                    <div className="absolute top-0 right-0 p-8 opacity-5 group-hover:opacity-10 transition-opacity">
-                        <Layers size={isAdmin ? 100 : 150} />
-                    </div>
-                    <div className="relative z-10">
-                        <div className="flex items-center gap-2 mb-2 text-muted-foreground">
-                            <Layers size={18} />
-                            <span className="text-xs font-bold uppercase tracking-wider">{t('repo.stats.total')}</span>
+                {!isAdmin ? (
+                    <div className="bg-card p-8 rounded-[32px] border border-border shadow-sm relative overflow-hidden group">
+                        <div className="absolute top-0 right-0 p-8 opacity-5 group-hover:opacity-10 transition-opacity">
+                            <Archive size={180} />
                         </div>
-                        <h3 className="text-4xl font-serif font-bold text-foreground">{stats.public}</h3>
-                        <p className="text-xs text-muted-foreground mt-2">Published Entries</p>
-                    </div>
-                    
-                    {/* Extra decorative info for public view only */}
-                    {!isAdmin && (
-                        <div className="hidden md:block relative z-10 border-l border-border pl-8">
-                            <p className="text-sm text-muted-foreground max-w-xs">
-                                Browse through a curated collection of technical notes, research papers, and system architecture documentation.
-                            </p>
+                        <div className="relative z-10 flex flex-col md:flex-row items-start md:items-center gap-6">
+                            <div className="w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center text-primary">
+                                <BookOpen size={32} />
+                            </div>
+                            <div>
+                                <h3 className="text-2xl font-bold text-foreground mb-1">
+                                    {stats.public} Public Entries
+                                </h3>
+                                <p className="text-sm text-muted-foreground max-w-lg leading-relaxed">
+                                    Explore a curated collection of technical notes, research papers, and system architecture documentation.
+                                </p>
+                            </div>
                         </div>
-                    )}
-                </div>
-                
-                {/* Admin Only Stats */}
-                {isAdmin && (
+                    </div>
+                ) : (
                     <>
-                        {/* Traffic Stats */}
+                        <div className="bg-card p-6 rounded-[24px] border border-border shadow-sm hover:shadow-md transition-all relative overflow-hidden group">
+                            <div className="absolute top-0 right-0 p-8 opacity-5 group-hover:opacity-10 transition-opacity">
+                                <Layers size={100} />
+                            </div>
+                            <div className="relative z-10">
+                                <div className="flex items-center gap-2 mb-2 text-muted-foreground">
+                                    <Layers size={18} />
+                                    <span className="text-xs font-bold uppercase tracking-wider">{t('repo.stats.total')}</span>
+                                </div>
+                                <h3 className="text-4xl font-serif font-bold text-foreground">{stats.public}</h3>
+                                <p className="text-xs text-muted-foreground mt-2">Published Entries</p>
+                            </div>
+                        </div>
+
                         <div className="bg-[#E3F2FD] dark:bg-[#1E2A38] p-6 rounded-[24px] border border-blue-200/50 dark:border-blue-800/30 shadow-sm hover:shadow-md transition-all relative overflow-hidden group">
                             <div className="absolute -bottom-4 -right-4 text-blue-500/10 group-hover:text-blue-500/20 transition-colors">
                                 <Users size={120} />
@@ -374,7 +392,6 @@ export default function Repository() {
                         </p>
                     </div>
                     
-                    {/* Stats & Actions - Visible on Mobile now */}
                     <div className="flex items-center justify-between w-full md:w-auto gap-4 text-muted-foreground mt-2 md:mt-0">
                         <div className="flex items-center gap-4">
                             <span className="flex items-center gap-1 text-xs text-muted-foreground" title="Views">
@@ -395,7 +412,7 @@ export default function Repository() {
                                     {post.is_public ? <Eye size={16} /> : <EyeOff size={16} />}
                                 </button>
                                 <button 
-                                    onClick={(e) => handleDelete(e, post.id)}
+                                    onClick={(e) => confirmDelete(e, post.id)}
                                     className="p-2 rounded-full hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors"
                                     title={t('repo.delete')}
                                 >

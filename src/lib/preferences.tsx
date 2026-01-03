@@ -8,18 +8,23 @@ interface PreferencesContextType {
 const PreferencesContext = createContext<PreferencesContextType | undefined>(undefined);
 
 export function PreferencesProvider({ children }: { children: React.ReactNode }) {
-  // Default base size is 16px, but we'll adjust for mobile on mount
   const [fontSize, setFontSizeState] = useState<number>(16);
 
   useEffect(() => {
     const savedSize = localStorage.getItem('khaliq-font-size-px');
+    
     if (savedSize) {
         setFontSizeState(parseInt(savedSize));
     } else {
-        // If no preference saved, check device width
+        // Updated Logic per user request:
+        // Mobile (< 768px): 12px
+        // Desktop (>= 768px): 18px
         if (window.innerWidth < 768) {
-            setFontSizeState(14); // Smaller default for mobile
-            document.documentElement.style.setProperty('--base-font-size', '14px');
+            setFontSizeState(12); 
+            document.documentElement.style.setProperty('--base-font-size', '12px');
+        } else {
+            setFontSizeState(18);
+            document.documentElement.style.setProperty('--base-font-size', '18px');
         }
     }
   }, []);
@@ -32,7 +37,7 @@ export function PreferencesProvider({ children }: { children: React.ReactNode })
     document.documentElement.style.setProperty('--base-font-size', `${size}px`);
   };
 
-  // Apply initial size
+  // Apply initial size on mount/change
   useEffect(() => {
     document.documentElement.style.setProperty('--base-font-size', `${fontSize}px`);
   }, [fontSize]);

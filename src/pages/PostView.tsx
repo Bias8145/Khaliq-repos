@@ -2,7 +2,7 @@ import React, { useEffect, useState, useRef } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { supabase, type Post } from '../lib/supabase';
 import { format } from 'date-fns';
-import { ArrowLeft, Edit, Clock, Share2, Printer, Heart, Link as LinkIcon, Twitter, Linkedin, MessageCircle, Download, ImageIcon, X, Loader2, Feather, Send, Check, Moon, Sun, RefreshCw, Maximize, Smartphone, Square, Layout, MousePointerClick, TextCursorInput, Globe } from 'lucide-react';
+import { ArrowLeft, Edit, Clock, Share2, Printer, Heart, Link as LinkIcon, Twitter, Linkedin, MessageCircle, Download, ImageIcon, X, Loader2, Feather, Send, Check, Moon, Sun, RefreshCw, Maximize, Smartphone, Square, Layout, MousePointerClick, TextCursorInput, Globe, Microscope, Book, MessageSquareQuote, FileText } from 'lucide-react';
 import { calculateReadingTime } from '../lib/utils';
 import { motion, useScroll, useSpring, AnimatePresence } from 'framer-motion';
 import { MarkdownRenderer } from '../components/MarkdownRenderer';
@@ -12,6 +12,7 @@ import { useLanguage } from '../lib/language';
 import html2canvas from 'html2canvas';
 
 type AspectRatio = 'auto' | 'portrait' | 'square' | 'story';
+type CardTheme = 'dark' | 'light';
 
 export default function PostView() {
   const { id } = useParams();
@@ -25,8 +26,8 @@ export default function PostView() {
   const [liked, setLiked] = useState(false);
   
   // Visual Share State
-  const [cardTheme, setCardTheme] = useState<'dark' | 'light'>('dark');
   const [aspectRatio, setAspectRatio] = useState<AspectRatio>('auto');
+  const [cardTheme, setCardTheme] = useState<CardTheme>('dark');
   const [customExcerpt, setCustomExcerpt] = useState('');
   const [isSelectingText, setIsSelectingText] = useState(false);
   
@@ -46,14 +47,12 @@ export default function PostView() {
     const fetchPost = async () => {
       if (!id) return;
       
-      // Get client ID for likes
       let clientId = localStorage.getItem('khaliq_client_id');
       if (!clientId) {
         clientId = Math.random().toString(36).substring(2) + Date.now().toString(36);
         localStorage.setItem('khaliq_client_id', clientId);
       }
 
-      // Check if liked via DB
       const { data: likeData } = await supabase
         .from('post_likes_log')
         .select('id')
@@ -63,7 +62,6 @@ export default function PostView() {
       
       if (likeData) setLiked(true);
 
-      // Increment View Count (Optimized to run once per session/post)
       const viewedKey = `viewed_post_${id}`;
       if (!sessionStorage.getItem(viewedKey)) {
         await supabase.rpc('increment_view_count', { post_id: id });
@@ -98,7 +96,6 @@ export default function PostView() {
     return () => { document.title = 'Bias Fajar Khaliq | Repository'; }
   }, [id]);
 
-  // Auto-grab selection when opening visual share
   useEffect(() => {
     if (showVisualShare && !isSelectingText) {
         const selection = window.getSelection()?.toString().trim();
@@ -160,7 +157,6 @@ export default function PostView() {
     
     const clientId = localStorage.getItem('khaliq_client_id') || 'unknown';
     
-    // Optimistic Update
     const newLikedState = !liked;
     setLiked(newLikedState);
     if (post) {
@@ -171,7 +167,6 @@ export default function PostView() {
         await supabase.rpc('toggle_like', { p_id: id, c_id: clientId }); 
     } catch (error) { 
         console.error(error); 
-        // Revert on error
         setLiked(!newLikedState);
         if (post) setPost({ ...post, likes: Math.max(0, (post.likes || 0) + (newLikedState ? -1 : 1)) });
     }
@@ -190,17 +185,46 @@ export default function PostView() {
     toast("File downloaded successfully", "success");
   };
 
+  // ROBUST IMAGE GENERATION: CLONE & CAPTURE
   const generateImageBlob = async (): Promise<Blob | null> => {
     if (!cardRef.current) return null;
-    await new Promise(resolve => setTimeout(resolve, 100));
-    const canvas = await html2canvas(cardRef.current, {
-        scale: 3, 
-        backgroundColor: '#18181B', // Force dark background
-        useCORS: true,
-        logging: false,
-        allowTaint: true,
-    });
-    return new Promise(resolve => canvas.toBlob(resolve, 'image/png', 1.0));
+    
+    // 1. Clone the node
+    const clone = cardRef.current.cloneNode(true) as HTMLElement;
+    
+    // 2. Style the clone to be fixed width and hidden
+    clone.style.position = 'fixed';
+    clone.style.top = '-9999px';
+    clone.style.left = '-9999px';
+    clone.style.width = '600px'; // Force 600px width
+    clone.style.height = 'auto';
+    clone.style.zIndex = '-1';
+    clone.style.transform = 'none';
+    clone.style.borderRadius = '0';
+
+    // Append to body
+    document.body.appendChild(clone);
+
+    try {
+        // 3. Capture the clone
+        const canvas = await html2canvas(clone, {
+            scale: 2, 
+            backgroundColor: cardTheme === 'dark' ? '#18181B' : '#FFFFFF',
+            useCORS: true,
+            logging: false,
+            allowTaint: true,
+            width: 600,
+            windowWidth: 1200,
+        });
+
+        return new Promise(resolve => canvas.toBlob(resolve, 'image/png', 1.0));
+    } catch (err) {
+        console.error("Capture failed:", err);
+        return null;
+    } finally {
+        // 4. Clean up
+        document.body.removeChild(clone);
+    }
   };
 
   const handleDownloadImage = async () => {
@@ -273,6 +297,18 @@ export default function PostView() {
     setIsSelectingText(false);
     setShowVisualShare(true);
   };
+
+  // Helper to determine icon based on category
+  const getCategoryIcon = (category?: string) => {
+    switch(category) {
+        case 'Penelitian': return Microscope;
+        case 'Catatan': return Book;
+        case 'Bahasan': return MessageSquareQuote;
+        default: return FileText;
+    }
+  };
+  
+  const BackgroundIcon = getCategoryIcon(post?.category);
 
   if (!post) return (
     <div className="min-h-screen flex items-center justify-center">
@@ -482,79 +518,110 @@ export default function PostView() {
                                     </div>
                                 </div>
 
-                                {/* Text Editor */}
-                                <div className="space-y-2">
-                                    <div className="flex justify-between items-center">
-                                        <span className="text-xs font-bold uppercase text-muted-foreground">{t('post.customizeText')}</span>
-                                        <div className="flex items-center gap-3">
+                                {/* Theme & Text */}
+                                <div className="space-y-4">
+                                    <div className="space-y-2">
+                                        <span className="text-xs font-bold uppercase text-muted-foreground flex items-center gap-2">
+                                            <Sun size={14} /> {t('post.cardTheme')}
+                                        </span>
+                                        <div className="flex bg-secondary rounded-lg p-1">
                                             <button 
-                                                onClick={startSelectionMode}
-                                                className="text-[10px] font-bold text-primary flex items-center gap-1 hover:underline bg-primary/10 px-2 py-1 rounded-md"
+                                                onClick={() => setCardTheme('dark')}
+                                                className={cn("flex-1 py-1.5 rounded-md text-xs font-bold transition-all flex items-center justify-center gap-2", cardTheme === 'dark' ? "bg-background shadow-sm text-primary" : "text-muted-foreground")}
                                             >
-                                                <MousePointerClick size={12} /> {t('post.selectFromPage')}
+                                                <Moon size={12} /> Dark
                                             </button>
                                             <button 
-                                                onClick={() => setCustomExcerpt(post.excerpt || post.content.substring(0, 120))}
-                                                className="text-[10px] font-bold text-muted-foreground flex items-center gap-1 hover:text-foreground"
+                                                onClick={() => setCardTheme('light')}
+                                                className={cn("flex-1 py-1.5 rounded-md text-xs font-bold transition-all flex items-center justify-center gap-2", cardTheme === 'light' ? "bg-background shadow-sm text-primary" : "text-muted-foreground")}
                                             >
-                                                <RefreshCw size={10} /> {t('post.reset')}
+                                                <Sun size={12} /> Light
                                             </button>
                                         </div>
                                     </div>
-                                    <textarea 
-                                        value={customExcerpt}
-                                        onChange={(e) => setCustomExcerpt(e.target.value)}
-                                        className="w-full bg-secondary/50 border border-transparent rounded-lg p-3 text-sm focus:ring-1 focus:ring-primary/20 focus:border-primary outline-none transition-all resize-none h-24"
-                                        placeholder="Enter text to display on card..."
-                                    />
+
+                                    <div className="space-y-2">
+                                        <div className="flex justify-between items-center">
+                                            <span className="text-xs font-bold uppercase text-muted-foreground">{t('post.customizeText')}</span>
+                                            <div className="flex items-center gap-3">
+                                                <button 
+                                                    onClick={startSelectionMode}
+                                                    className="text-[10px] font-bold text-primary flex items-center gap-1 hover:underline bg-primary/10 px-2 py-1 rounded-md"
+                                                >
+                                                    <MousePointerClick size={12} /> {t('post.selectFromPage')}
+                                                </button>
+                                                <button 
+                                                    onClick={() => setCustomExcerpt(post.excerpt || post.content.substring(0, 120))}
+                                                    className="text-[10px] font-bold text-muted-foreground flex items-center gap-1 hover:text-foreground"
+                                                >
+                                                    <RefreshCw size={10} /> {t('post.reset')}
+                                                </button>
+                                            </div>
+                                        </div>
+                                        <textarea 
+                                            value={customExcerpt}
+                                            onChange={(e) => setCustomExcerpt(e.target.value)}
+                                            className="w-full bg-secondary/50 border border-transparent rounded-lg p-3 text-sm focus:ring-1 focus:ring-primary/20 focus:border-primary outline-none transition-all resize-none h-24"
+                                            placeholder="Enter text to display on card..."
+                                        />
+                                    </div>
                                 </div>
                             </div>
                         </div>
 
-                        {/* REBUILT SHARE CARD - Matching Reference Image */}
+                        {/* REBUILT SHARE CARD - Material Minimalist */}
                         <div className="w-full flex justify-center mb-6">
                             <div 
                                 ref={cardRef}
                                 className={cn(
-                                    "relative w-full flex flex-col items-center justify-center text-center overflow-hidden bg-[#18181B] text-white p-12",
+                                    "relative w-full flex flex-col items-center justify-center text-center overflow-hidden p-12 transition-colors duration-300",
                                     aspectRatio === 'square' ? "aspect-square" : 
                                     aspectRatio === 'portrait' ? "aspect-[4/5]" : 
                                     aspectRatio === 'story' ? "aspect-[9/16]" : 
-                                    "min-h-[500px] h-auto"
+                                    "min-h-[500px] h-auto",
+                                    cardTheme === 'dark' ? "bg-[#18181B] text-white" : "bg-white text-zinc-900"
                                 )}
                                 style={{ 
                                     borderRadius: '24px',
-                                    border: '1px solid #27272A',
-                                    boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)'
+                                    border: cardTheme === 'dark' ? '1px solid #27272A' : '1px solid #E4E4E7',
+                                    boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.15)'
                                 }}
                             >
                                 {/* Background Elements */}
-                                <div className="absolute inset-0 bg-gradient-to-b from-[#27272A] to-[#18181B] opacity-50"></div>
+                                <div className={cn("absolute inset-0 opacity-50", cardTheme === 'dark' ? "bg-gradient-to-b from-[#27272A] to-[#18181B]" : "bg-gradient-to-b from-gray-50 to-white")}></div>
+                                
+                                {/* Large Background Icon - Context Aware */}
+                                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 opacity-[0.03] pointer-events-none">
+                                    <BackgroundIcon size={400} className={cn("rotate-[-10deg]", cardTheme === 'dark' ? "text-white" : "text-black")} />
+                                </div>
                                 
                                 {/* Top Feather Icon */}
-                                <div className="relative z-10 w-16 h-16 rounded-full border border-white/10 flex items-center justify-center mb-8 bg-white/5 backdrop-blur-sm">
-                                    <Feather size={28} className="text-[#D4C5A9]" />
+                                <div className={cn(
+                                    "relative z-10 w-16 h-16 rounded-full border flex items-center justify-center mb-8 backdrop-blur-sm",
+                                    cardTheme === 'dark' ? "border-white/10 bg-white/5" : "border-black/5 bg-black/5"
+                                )}>
+                                    <Feather size={28} className={cn(cardTheme === 'dark' ? "text-[#D4C5A9]" : "text-[#BFA170]")} />
                                 </div>
 
                                 {/* Main Title */}
-                                <h2 className="relative z-10 text-4xl md:text-5xl font-bold tracking-tight mb-2 text-white font-sans">
+                                <h2 className={cn("relative z-10 text-4xl md:text-5xl font-bold tracking-tight mb-2 font-sans", cardTheme === 'dark' ? "text-white" : "text-zinc-900")}>
                                     {post.title}
                                 </h2>
-                                <p className="relative z-10 text-xs font-bold tracking-[0.3em] text-[#D4C5A9] uppercase mb-12">
+                                <p className={cn("relative z-10 text-xs font-bold tracking-[0.3em] uppercase mb-12", cardTheme === 'dark' ? "text-[#D4C5A9]" : "text-[#BFA170]")}>
                                     {post.category || 'Digital Garden'}
                                 </p>
 
                                 {/* Quote Section */}
                                 <div className="relative z-10 max-w-lg mx-auto">
-                                    <p className="text-lg md:text-xl leading-relaxed text-gray-300 font-serif italic">
+                                    <p className={cn("text-lg md:text-xl leading-relaxed font-serif italic", cardTheme === 'dark' ? "text-gray-300" : "text-zinc-600")}>
                                         "{customExcerpt}"
                                     </p>
                                 </div>
 
                                 {/* Footer / URL */}
-                                <div className="relative z-10 mt-16 pt-8 border-t border-white/10 w-full max-w-xs flex items-center justify-center gap-2">
-                                    <Globe size={14} className="text-[#D4C5A9]" />
-                                    <span className="text-xs font-bold tracking-widest text-[#D4C5A9] uppercase">
+                                <div className={cn("relative z-10 mt-16 pt-8 border-t w-full max-w-xs flex items-center justify-center gap-2", cardTheme === 'dark' ? "border-white/10" : "border-black/10")}>
+                                    <Globe size={14} className={cn(cardTheme === 'dark' ? "text-[#D4C5A9]" : "text-[#BFA170]")} />
+                                    <span className={cn("text-xs font-bold tracking-widest uppercase", cardTheme === 'dark' ? "text-[#D4C5A9]" : "text-[#BFA170]")}>
                                         khaliq-repos.pages.dev
                                     </span>
                                 </div>
