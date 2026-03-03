@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { LogOut, PenTool, Home, BookOpen, Sun, Moon, Feather, Instagram, Github, ArrowRight, Type, Settings2, RefreshCw, Languages } from 'lucide-react';
+import { LogOut, PenTool, BookOpen, Sun, Moon, Feather, Settings2, RefreshCw, Languages } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useTheme } from '../lib/theme';
 import { usePreferences } from '../lib/preferences';
@@ -9,7 +9,6 @@ import { useLanguage } from '../lib/language';
 import { cn } from '../lib/utils';
 
 export default function Navbar() {
-  const [isOpen, setIsOpen] = useState(false);
   const [showFontSettings, setShowFontSettings] = useState(false);
   const [user, setUser] = useState<any>(null);
   const { theme, setTheme } = useTheme();
@@ -44,21 +43,11 @@ export default function Navbar() {
   const handleLogout = async () => {
     await supabase.auth.signOut();
     navigate('/');
-    setIsOpen(false);
   };
 
   const navItems = [
-    { name: t('nav.home'), path: '/', icon: Home, desc: t('nav.homeDesc') },
-    { name: t('nav.repository'), path: '/repo', icon: BookOpen, desc: t('nav.repoDesc') },
+    { name: t('nav.repository'), path: '/', icon: BookOpen, desc: t('nav.repoDesc') },
   ];
-
-  useEffect(() => {
-    if (isOpen) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = 'unset';
-    }
-  }, [isOpen]);
 
   return (
     <>
@@ -210,35 +199,32 @@ export default function Navbar() {
             </div>
           </div>
 
-          {/* Mobile Toggle & Actions */}
-          <div className="flex items-center gap-2 md:hidden">
+          {/* Mobile Actions */}
+          <div className="flex items-center gap-1 md:hidden">
+             {user && (
+                <>
+                    <Link 
+                        to="/editor/new" 
+                        className="p-2 text-primary hover:bg-primary/10 rounded-full transition-colors"
+                        title={t('nav.write')}
+                    >
+                        <PenTool size={18} />
+                    </Link>
+                    <button 
+                        onClick={handleLogout} 
+                        className="p-2 text-destructive hover:bg-destructive/10 rounded-full transition-colors"
+                        title={t('nav.signOut')}
+                    >
+                        <LogOut size={18} />
+                    </button>
+                </>
+             )}
              <button 
                 onClick={() => setShowFontSettings(!showFontSettings)}
                 className="p-2 text-muted-foreground hover:bg-secondary rounded-full"
              >
                 <Settings2 size={20} />
              </button>
-             
-             <button 
-                onClick={() => setIsOpen(!isOpen)} 
-                className="p-2 text-foreground hover:bg-secondary rounded-full transition-colors relative z-50 w-10 h-10 flex items-center justify-center group"
-                aria-label="Toggle Menu"
-            >
-                <div className="relative w-5 h-4 flex flex-col justify-between">
-                    <motion.span 
-                        animate={isOpen ? { rotate: 45, y: 8 } : { rotate: 0, y: 0 }}
-                        className="w-full h-0.5 bg-foreground rounded-full origin-left"
-                    />
-                    <motion.span 
-                        animate={isOpen ? { opacity: 0, x: -10 } : { opacity: 1, x: 0 }}
-                        className="w-3/4 h-0.5 bg-foreground rounded-full self-end group-hover:w-full transition-all"
-                    />
-                    <motion.span 
-                        animate={isOpen ? { rotate: -45, y: -8 } : { rotate: 0, y: 0 }}
-                        className="w-full h-0.5 bg-foreground rounded-full origin-left"
-                    />
-                </div>
-            </button>
           </div>
         </div>
       </nav>
@@ -311,105 +297,6 @@ export default function Navbar() {
                     </div>
                 </div>
             </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* Mobile Menu Overlay */}
-      <AnimatePresence>
-        {isOpen && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.3 }}
-            className="fixed inset-0 z-40 bg-background/95 backdrop-blur-3xl md:hidden flex flex-col pt-24 px-6 pb-10 overflow-y-auto"
-          >
-            <div className="absolute top-0 right-0 w-64 h-64 bg-primary/10 rounded-full blur-[100px] -z-10"></div>
-            <div className="absolute bottom-0 left-0 w-64 h-64 bg-secondary/50 rounded-full blur-[100px] -z-10"></div>
-
-            <div className="flex flex-col gap-6">
-                {navItems.map((item, index) => (
-                  <motion.div
-                    key={item.path}
-                    initial={{ opacity: 0, x: -40 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: 0.1 + (index * 0.1), type: "spring", stiffness: 100 }}
-                  >
-                      <Link
-                        to={item.path}
-                        onClick={() => setIsOpen(false)}
-                        className="group block"
-                      >
-                        <div className="flex items-center justify-between">
-                            <span className={cn(
-                                "text-3xl font-serif font-bold transition-colors duration-300",
-                                location.pathname === item.path ? "text-primary" : "text-foreground group-hover:text-primary/50"
-                            )}>
-                                {item.name}
-                            </span>
-                            <ArrowRight className={cn(
-                                "transition-all duration-300 opacity-0 -translate-x-4 group-hover:opacity-100 group-hover:translate-x-0",
-                                location.pathname === item.path ? "opacity-100 translate-x-0 text-primary" : "text-muted-foreground"
-                            )} />
-                        </div>
-                        <p className="text-sm text-muted-foreground mt-1 font-medium tracking-wide pl-1">
-                            {item.desc}
-                        </p>
-                      </Link>
-                      <div className="h-px w-full bg-border/50 mt-4" />
-                  </motion.div>
-                ))}
-
-                {user && (
-                    <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.3 }}
-                    >
-                        <Link
-                        to="/editor/new"
-                        onClick={() => setIsOpen(false)}
-                        className="flex items-center justify-center gap-3 w-full p-4 rounded-2xl bg-primary text-primary-foreground text-lg font-bold shadow-xl shadow-primary/20 mt-2"
-                        >
-                        <PenTool size={20} />
-                        {t('nav.write')}
-                        </Link>
-                    </motion.div>
-                )}
-            </div>
-
-            <motion.div 
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.4 }}
-                className="mt-auto space-y-6 pt-8"
-            >
-                <div className="grid grid-cols-2 gap-4">
-                    <a href="https://instagram.com/2.khaliq" target="_blank" rel="noreferrer" className="flex flex-col items-center justify-center gap-2 p-4 rounded-2xl bg-secondary/50 hover:bg-secondary transition-colors group">
-                        <Instagram size={24} className="text-foreground group-hover:text-[#E1306C] transition-colors" />
-                        <span className="text-xs font-bold uppercase tracking-wider">Instagram</span>
-                    </a>
-                    <a href="https://github.com/Bias8145" target="_blank" rel="noreferrer" className="flex flex-col items-center justify-center gap-2 p-4 rounded-2xl bg-secondary/50 hover:bg-secondary transition-colors group">
-                        <Github size={24} className="text-foreground group-hover:text-primary transition-colors" />
-                        <span className="text-xs font-bold uppercase tracking-wider">GitHub</span>
-                    </a>
-                </div>
-
-                <div className="flex items-center justify-between pt-4 border-t border-border">
-                    <span className="text-sm font-bold text-muted-foreground">Khaliq Repository</span>
-                    
-                    {user ? (
-                        <button onClick={handleLogout} className="text-sm font-bold text-destructive flex items-center gap-2">
-                            <LogOut size={18} /> {t('nav.signOut')}
-                        </button>
-                    ) : (
-                        <Link to="/login" onClick={() => setIsOpen(false)} className="text-sm font-bold text-primary flex items-center gap-2">
-                            {t('nav.adminLogin')} <ArrowRight size={14} />
-                        </Link>
-                    )}
-                </div>
-            </motion.div>
-          </motion.div>
         )}
       </AnimatePresence>
     </>

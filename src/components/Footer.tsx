@@ -1,5 +1,5 @@
 import React from 'react';
-import { Github, Instagram, Mail, ArrowUpRight, MapPin } from 'lucide-react';
+import { Github, Instagram, Mail, MapPin } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useLanguage } from '../lib/language';
 
@@ -7,7 +7,6 @@ export default function Footer() {
   const { t } = useLanguage();
 
   return (
-    // "Lancip Membulat" - Sharp yet rounded using rounded-t-[40px]
     <footer className="bg-card pt-12 pb-8 mt-auto rounded-t-[40px] border-t border-border shadow-[0_-10px_40px_-15px_rgba(0,0,0,0.05)] relative z-10 mx-0 md:mx-0">
       <div className="max-w-6xl mx-auto px-6">
         
@@ -38,10 +37,9 @@ export default function Footer() {
           <div className="md:col-span-3">
             <h4 className="text-[10px] font-bold text-primary uppercase tracking-widest mb-4">{t('footer.nav')}</h4>
             <ul className="space-y-2">
-              <FooterLink to="/" label={t('nav.home')} />
-              <FooterLink to="/repo" label={t('nav.repository')} />
-              <FooterLink to="/repo?tab=Penelitian" label={t('repo.tabs.research')} />
-              <FooterLink to="/repo?tab=Catatan" label={t('repo.tabs.notes')} />
+              <FooterLink to="/" label={t('nav.repository')} />
+              <FooterLink to="/?tab=Penelitian" label={t('repo.tabs.research')} />
+              <FooterLink to="/?tab=Catatan" label={t('repo.tabs.notes')} />
             </ul>
           </div>
 
@@ -57,12 +55,6 @@ export default function Footer() {
                         <span className="block font-bold text-foreground">{t('footer.westJava')}</span>
                         <span>{t('footer.consultation')}</span>
                     </div>
-                </div>
-                
-                <div className="pt-1">
-                    <Link to="/login" className="text-[10px] font-bold text-muted-foreground hover:text-primary transition-colors flex items-center gap-1">
-                        {t('footer.adminPortal')} <ArrowUpRight size={10} />
-                    </Link>
                 </div>
             </div>
           </div>
