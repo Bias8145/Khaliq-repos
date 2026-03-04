@@ -44,26 +44,27 @@ export default function Home() {
     if (!cardRef.current) return null;
     
     const clone = cardRef.current.cloneNode(true) as HTMLElement;
+    
     clone.style.position = 'fixed';
     clone.style.top = '-9999px';
     clone.style.left = '-9999px';
-    clone.style.width = '600px'; 
-    clone.style.height = 'auto'; 
     clone.style.zIndex = '-1';
     clone.style.transform = 'none';
-    clone.style.borderRadius = '0'; 
+    
+    const rect = cardRef.current.getBoundingClientRect();
+    clone.style.width = `${rect.width}px`;
+    clone.style.height = `${rect.height}px`;
     
     document.body.appendChild(clone);
 
     try {
         const canvas = await html2canvas(clone, {
-            scale: 2,
-            backgroundColor: cardTheme === 'dark' ? '#141414' : '#FAFAFA', 
+            scale: 3, // High resolution
+            backgroundColor: null, // Transparent to keep rounded corners
             useCORS: true,
             logging: false,
-            allowTaint: true,
-            width: 600,
-            windowWidth: 1200, 
+            width: rect.width,
+            height: rect.height,
         });
 
         return new Promise(resolve => canvas.toBlob(resolve, 'image/png', 1.0));
@@ -400,96 +401,98 @@ export default function Home() {
 
                     {/* REBUILT SHARE CARD - Solid Gold Theme */}
                     <div className="w-full flex justify-center mb-6">
-                        <div 
-                            ref={cardRef}
-                            className={cn(
-                                "relative w-full flex flex-col justify-between overflow-hidden p-10 transition-colors duration-300",
-                                aspectRatio === 'square' ? "aspect-square" : 
-                                aspectRatio === 'portrait' ? "aspect-[4/5]" : 
-                                aspectRatio === 'story' ? "aspect-[9/16]" : 
-                                "min-h-[500px] h-auto",
-                                cardTheme === 'dark' ? "bg-[#141414] text-[#E5E5E5]" : "bg-[#FAFAFA] text-[#1A1A1A]"
-                            )}
-                            style={{ 
-                                borderRadius: '24px',
-                                border: cardTheme === 'dark' ? '1px solid #2E2E2E' : '1px solid #E0E0E0',
-                            }}
-                        >
-                            {/* Background Elements */}
-                            <div className={cn("absolute inset-0", cardTheme === 'dark' ? "bg-[#141414]" : "bg-[#FAFAFA]")}></div>
-                            
-                            {/* Large Background Icon - Very Subtle */}
-                            <div className="absolute top-1/2 right-0 -translate-y-1/2 translate-x-1/4 opacity-[0.03] pointer-events-none">
-                                <PenTool size={400} className={cn("rotate-[-10deg]", cardTheme === 'dark' ? "text-white" : "text-black")} />
-                            </div>
-                            
-                            {/* Header: Logo & Brand */}
-                            <div className="relative z-10 flex items-center gap-4 mb-12">
-                                <div className={cn(
-                                    "w-10 h-10 rounded-full border flex items-center justify-center",
-                                    cardTheme === 'dark' ? "border-[#CBAE70]/30 bg-[#CBAE70]/10 text-[#CBAE70]" : "border-[#B39559]/30 bg-[#B39559]/10 text-[#B39559]"
-                                )}>
-                                    <Feather size={18} />
-                                </div>
-                                <div className="flex flex-col">
-                                    <span className={cn("text-xs font-bold tracking-widest uppercase", cardTheme === 'dark' ? "text-[#E5E5E5]" : "text-[#1A1A1A]")}>
-                                        Khaliq Repository
-                                    </span>
-                                    <span className={cn("text-[10px] tracking-wider uppercase opacity-60", cardTheme === 'dark' ? "text-[#E5E5E5]" : "text-[#1A1A1A]")}>
-                                        Digital Garden & Archive
-                                    </span>
-                                </div>
-                            </div>
-
-                            {/* Main Content */}
-                            <div className="relative z-10 flex-grow flex flex-col justify-center mb-8">
-                                <h2 className={cn(
-                                    "text-4xl md:text-5xl font-bold tracking-tight mb-8 font-sans leading-[1.1]", 
-                                    cardTheme === 'dark' ? "text-[#E5E5E5]" : "text-[#1A1A1A]"
-                                )}>
-                                    Bias Fajar Khaliq
-                                </h2>
+                        {/* Wrapper for html2canvas to fix rounded corner bleed */}
+                        <div ref={cardRef} style={{ backgroundColor: 'transparent' }}>
+                            <div 
+                                className={cn(
+                                    "relative w-full flex flex-col justify-between overflow-hidden p-10 transition-colors duration-300",
+                                    aspectRatio === 'square' ? "aspect-square" : 
+                                    aspectRatio === 'portrait' ? "aspect-[4/5]" : 
+                                    aspectRatio === 'story' ? "aspect-[9/16]" : 
+                                    "min-h-[500px] h-auto",
+                                    cardTheme === 'dark' ? "bg-[#141414] text-[#E5E5E5]" : "bg-[#FAFAFA] text-[#1A1A1A]"
+                                )}
+                                style={{ 
+                                    borderRadius: '32px',
+                                    border: cardTheme === 'dark' ? '1px solid #2E2E2E' : '1px solid #E0E0E0',
+                                }}
+                            >
+                                {/* Background Elements */}
+                                <div className={cn("absolute inset-0", cardTheme === 'dark' ? "bg-[#141414]" : "bg-[#FAFAFA]")}></div>
                                 
-                                {/* Quote / Excerpt with Bar */}
-                                <div className={cn(
-                                    "pl-6 border-l-4",
-                                    cardTheme === 'dark' ? "border-[#CBAE70]/50" : "border-[#B39559]/50"
-                                )}>
-                                    <p className={cn(
-                                        "text-lg md:text-xl leading-relaxed italic whitespace-pre-wrap", 
-                                        cardTheme === 'dark' ? "text-[#A3A3A3]" : "text-[#666666]"
+                                {/* Large Background Icon - Very Subtle */}
+                                <div className="absolute top-1/2 right-0 -translate-y-1/2 translate-x-1/4 opacity-[0.03] pointer-events-none">
+                                    <PenTool size={400} className={cn("rotate-[-10deg]", cardTheme === 'dark' ? "text-white" : "text-black")} />
+                                </div>
+                                
+                                {/* Header: Logo & Brand */}
+                                <div className="relative z-10 flex items-center gap-4 mb-12">
+                                    <div className={cn(
+                                        "w-10 h-10 rounded-full border flex items-center justify-center",
+                                        cardTheme === 'dark' ? "border-[#CBAE70]/30 bg-[#CBAE70]/10 text-[#CBAE70]" : "border-[#B39559]/30 bg-[#B39559]/10 text-[#B39559]"
                                     )}>
-                                        "{promoText}"
-                                    </p>
-                                </div>
-                            </div>
-
-                            {/* Footer */}
-                            <div className={cn(
-                                "relative z-10 pt-8 border-t flex items-end justify-between w-full", 
-                                cardTheme === 'dark' ? "border-[#2E2E2E]" : "border-[#E0E0E0]"
-                            )}>
-                                {/* Left: Website URL */}
-                                <div className="flex items-center gap-2">
-                                     <div className={cn(
-                                        "w-8 h-8 rounded-full flex items-center justify-center",
-                                        cardTheme === 'dark' ? "bg-[#E5E5E5] text-[#141414]" : "bg-[#1A1A1A] text-[#FAFAFA]"
-                                     )}>
-                                        <Globe size={14} />
-                                     </div>
-                                     <span className={cn("text-xs font-bold tracking-wide", cardTheme === 'dark' ? "text-[#E5E5E5]" : "text-[#1A1A1A]")}>
-                                        khaliq-repos.pages.dev
-                                     </span>
+                                        <Feather size={18} />
+                                    </div>
+                                    <div className="flex flex-col">
+                                        <span className={cn("text-xs font-bold tracking-widest uppercase", cardTheme === 'dark' ? "text-[#E5E5E5]" : "text-[#1A1A1A]")}>
+                                            Khaliq Repository
+                                        </span>
+                                        <span className={cn("text-[10px] tracking-wider uppercase opacity-60", cardTheme === 'dark' ? "text-[#E5E5E5]" : "text-[#1A1A1A]")}>
+                                            Digital Garden & Archive
+                                        </span>
+                                    </div>
                                 </div>
 
-                                {/* Right: Date & Meta */}
-                                <div className="text-right">
-                                    <p className={cn("text-[10px] uppercase tracking-wider opacity-60 mb-1", cardTheme === 'dark' ? "text-[#E5E5E5]" : "text-[#1A1A1A]")}>
-                                        {new Date().getFullYear()}
-                                    </p>
-                                    <p className={cn("text-xs font-bold", cardTheme === 'dark' ? "text-[#E5E5E5]" : "text-[#1A1A1A]")}>
-                                        Portfolio & Research
-                                    </p>
+                                {/* Main Content */}
+                                <div className="relative z-10 flex-grow flex flex-col justify-center mb-8">
+                                    <h2 className={cn(
+                                        "text-4xl md:text-5xl font-bold tracking-tight mb-8 font-sans leading-[1.1]", 
+                                        cardTheme === 'dark' ? "text-[#E5E5E5]" : "text-[#1A1A1A]"
+                                    )}>
+                                        Bias Fajar Khaliq
+                                    </h2>
+                                    
+                                    {/* Quote / Excerpt with Bar */}
+                                    <div className={cn(
+                                        "pl-6 border-l-4",
+                                        cardTheme === 'dark' ? "border-[#CBAE70]/50" : "border-[#B39559]/50"
+                                    )}>
+                                        <p className={cn(
+                                            "text-lg md:text-xl leading-relaxed italic whitespace-pre-wrap", 
+                                            cardTheme === 'dark' ? "text-[#A3A3A3]" : "text-[#666666]"
+                                        )}>
+                                            "{promoText}"
+                                        </p>
+                                    </div>
+                                </div>
+
+                                {/* Footer */}
+                                <div className={cn(
+                                    "relative z-10 pt-8 border-t flex items-end justify-between w-full", 
+                                    cardTheme === 'dark' ? "border-[#2E2E2E]" : "border-[#E0E0E0]"
+                                )}>
+                                    {/* Left: Website URL */}
+                                    <div className="flex items-center gap-2">
+                                         <div className={cn(
+                                            "w-8 h-8 rounded-full flex items-center justify-center",
+                                            cardTheme === 'dark' ? "bg-[#E5E5E5] text-[#141414]" : "bg-[#1A1A1A] text-[#FAFAFA]"
+                                         )}>
+                                            <Globe size={14} />
+                                         </div>
+                                         <span className={cn("text-xs font-bold tracking-wide", cardTheme === 'dark' ? "text-[#E5E5E5]" : "text-[#1A1A1A]")}>
+                                            khaliq-repos.pages.dev
+                                         </span>
+                                    </div>
+
+                                    {/* Right: Date & Meta */}
+                                    <div className="text-right">
+                                        <p className={cn("text-[10px] uppercase tracking-wider opacity-60 mb-1", cardTheme === 'dark' ? "text-[#E5E5E5]" : "text-[#1A1A1A]")}>
+                                            {new Date().getFullYear()}
+                                        </p>
+                                        <p className={cn("text-xs font-bold", cardTheme === 'dark' ? "text-[#E5E5E5]" : "text-[#1A1A1A]")}>
+                                            Portfolio & Research
+                                        </p>
+                                    </div>
                                 </div>
                             </div>
                         </div>

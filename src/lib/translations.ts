@@ -104,6 +104,7 @@ export const translations = {
       download: "Download",
       visualShare: "Share Card",
       downloadImage: "Save Image",
+      downloadAll: "Download All Slides",
       cardTheme: "Card Theme",
       cardSize: "Card Size",
       customizeText: "Customize Text",
@@ -113,6 +114,8 @@ export const translations = {
       cancelSelection: "Cancel",
       close: "Close",
       selectionInstruction: "Highlight text on the page, then click Capture.",
+      singleQuote: "Single Quote",
+      igCarousel: "IG Carousel",
       sizes: {
         auto: "Auto (Fit)",
         portrait: "Portrait (4:5)",
@@ -268,6 +271,7 @@ export const translations = {
       download: "Unduh",
       visualShare: "Kartu Kutipan",
       downloadImage: "Simpan Gambar",
+      downloadAll: "Unduh Semua Slide",
       cardTheme: "Tema Kartu",
       cardSize: "Ukuran Kartu",
       customizeText: "Sesuaikan Teks",
@@ -277,6 +281,8 @@ export const translations = {
       cancelSelection: "Batal",
       close: "Tutup",
       selectionInstruction: "Sorot teks pada halaman, lalu klik Ambil.",
+      singleQuote: "Kutipan Tunggal",
+      igCarousel: "IG Carousel",
       sizes: {
         auto: "Auto (Sesuai Teks)",
         portrait: "Potret (4:5)",
