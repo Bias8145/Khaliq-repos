@@ -4,7 +4,7 @@ import { supabase, type Post } from '../lib/supabase';
 import { format } from 'date-fns';
 import { ArrowLeft, Edit3, Clock, Share2, Printer, Heart, Link as LinkIcon, Twitter, Linkedin, MessageCircle, Download, ImageIcon, X, Loader2, Feather, Send, Moon, Sun, RefreshCw, Maximize, Smartphone, Square, Layout, MousePointerClick, TextCursorInput, Globe, Microscope, Book, MessageSquareQuote, FileText, Pin, Maximize2, Minimize2, ShieldCheck, Lock, Eye } from 'lucide-react';
 import { calculateReadingTime } from '../lib/utils';
-import { motion, useScroll, useSpring, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { MarkdownRenderer } from '../components/MarkdownRenderer';
 import { useToast } from '../components/ui/Toast';
 import { cn } from '../lib/utils';
@@ -37,14 +37,6 @@ export default function PostView() {
   const { toast } = useToast();
   const { t } = useLanguage();
   const cardRef = useRef<HTMLDivElement>(null);
-  
-  // Scroll Progress
-  const { scrollYProgress } = useScroll();
-  const scaleX = useSpring(scrollYProgress, {
-    stiffness: 100,
-    damping: 30,
-    restDelta: 0.001
-  });
 
   useEffect(() => {
     const fetchPost = async () => {
@@ -275,6 +267,7 @@ export default function PostView() {
 
   const startSelectionMode = () => {
     setShowVisualShare(false);
+    setShowShareMenu(false);
     setIsSelectingText(true);
   };
 
@@ -314,10 +307,7 @@ export default function PostView() {
 
   return (
     <>
-      {/* Reading Progress Bar - Positioned below the navbar (top-20) */}
-      <motion.div className="fixed top-20 left-0 right-0 h-1 bg-primary origin-left z-[40] no-print" style={{ scaleX }} />
-
-      <div className="min-h-screen pt-28 px-5 md:px-8 max-w-6xl mx-auto pb-40 md:pb-32">
+      <div className="min-h-screen pt-28 px-5 md:px-8 max-w-6xl mx-auto pb-48 md:pb-40">
         <Link to="/repo" className="inline-flex items-center gap-2 text-muted-foreground hover:text-primary mb-8 transition-colors group text-sm font-bold bg-secondary/50 px-5 py-2.5 rounded-full no-print">
           <ArrowLeft size={16} className="group-hover:-translate-x-1 transition-transform" /> {t('post.back')}
         </Link>
@@ -429,89 +419,99 @@ export default function PostView() {
         </div>
 
         {/* Floating Action Bar (Material 3 Pill) */}
-        <motion.div 
-            initial={{ y: 100, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            className="fixed bottom-6 md:bottom-8 left-1/2 -translate-x-1/2 z-[80] flex items-center gap-1.5 md:gap-2 p-2 bg-card/90 backdrop-blur-xl border border-border/50 rounded-full shadow-[0_8px_32px_-8px_rgba(0,0,0,0.2)] no-print w-[90%] max-w-fit justify-center"
-        >
-            <button 
-                onClick={handleLike} 
-                className={cn(
-                    "flex items-center gap-2 px-4 md:px-5 py-3 rounded-full transition-all text-sm font-bold",
-                    liked ? "bg-red-500/10 text-red-500" : "hover:bg-secondary text-muted-foreground hover:text-red-500"
-                )}
-            >
-                <Heart size={20} className={cn(liked && "fill-current")} />
-                <span>{post.likes}</span>
-            </button>
-            
-            <div className="w-px h-8 bg-border mx-1" />
-            
-            <button 
-                onClick={() => setShowShareMenu(!showShareMenu)} 
-                className={cn(
-                    "p-3 rounded-full transition-colors",
-                    showShareMenu ? "bg-primary text-primary-foreground" : "hover:bg-secondary text-muted-foreground"
-                )}
-                title={t('post.share')}
-            >
-                <Share2 size={20} />
-            </button>
-
-            <button 
-                onClick={() => setIsFocusMode(!isFocusMode)} 
-                className={cn(
-                    "p-3 rounded-full transition-colors", 
-                    isFocusMode ? "bg-primary text-primary-foreground shadow-lg shadow-primary/20" : "hover:bg-secondary text-muted-foreground"
-                )}
-                title="Mode Fokus"
-            >
-                {isFocusMode ? <Minimize2 size={20} /> : <Maximize2 size={20} />}
-            </button>
-
-            {canEdit && (
-                <>
-                    <div className="w-px h-8 bg-border mx-1" />
-                    <Link 
-                        to={`/editor/${post.id}`} 
-                        className="p-3 rounded-full hover:bg-secondary transition-colors text-muted-foreground"
-                        title="Edit Postingan"
+        <AnimatePresence>
+            {!isSelectingText && (
+                <motion.div 
+                    initial={{ y: 100, opacity: 0 }}
+                    animate={{ y: 0, opacity: 1 }}
+                    exit={{ y: 100, opacity: 0 }}
+                    transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
+                    // Moved higher for better thumb reachability
+                    className="fixed bottom-10 md:bottom-12 left-1/2 -translate-x-1/2 z-[80] flex items-center gap-1.5 md:gap-2 p-2.5 bg-card/95 backdrop-blur-xl border border-border/60 rounded-full shadow-[0_16px_40px_-12px_rgba(0,0,0,0.3)] no-print w-[90%] max-w-fit justify-center"
+                >
+                    <button 
+                        onClick={handleLike} 
+                        className={cn(
+                            "flex items-center gap-2 px-5 md:px-6 py-3.5 rounded-full transition-all text-sm font-bold",
+                            liked ? "bg-red-500/10 text-red-500" : "hover:bg-secondary text-muted-foreground hover:text-red-500"
+                        )}
                     >
-                        <Edit3 size={20} />
-                    </Link>
-                </>
-            )}
-        </motion.div>
+                        <Heart size={20} className={cn(liked && "fill-current")} />
+                        <span>{post.likes}</span>
+                    </button>
+                    
+                    <div className="w-px h-8 bg-border mx-1" />
+                    
+                    <button 
+                        onClick={() => setShowShareMenu(!showShareMenu)} 
+                        className={cn(
+                            "p-3.5 rounded-full transition-colors",
+                            showShareMenu ? "bg-primary text-primary-foreground shadow-lg shadow-primary/20" : "hover:bg-secondary text-muted-foreground"
+                        )}
+                        title={t('post.share')}
+                    >
+                        <Share2 size={20} />
+                    </button>
 
-        {/* Share Menu Dropdown - FIXED POSITIONING TO CENTER OF SCREEN */}
+                    <button 
+                        onClick={() => setIsFocusMode(!isFocusMode)} 
+                        className={cn(
+                            "p-3.5 rounded-full transition-colors", 
+                            isFocusMode ? "bg-primary text-primary-foreground shadow-lg shadow-primary/20" : "hover:bg-secondary text-muted-foreground"
+                        )}
+                        title="Mode Fokus"
+                    >
+                        {isFocusMode ? <Minimize2 size={20} /> : <Maximize2 size={20} />}
+                    </button>
+
+                    {canEdit && (
+                        <>
+                            <div className="w-px h-8 bg-border mx-1" />
+                            <Link 
+                                to={`/editor/${post.id}`} 
+                                className="p-3.5 rounded-full hover:bg-secondary transition-colors text-muted-foreground"
+                                title="Edit Postingan"
+                            >
+                                <Edit3 size={20} />
+                            </Link>
+                        </>
+                    )}
+                </motion.div>
+            )}
+        </AnimatePresence>
+
+        {/* Share Menu Dropdown */}
         <AnimatePresence>
             {showShareMenu && (
                 <>
-                    {/* Invisible backdrop to close menu when clicking outside */}
                     <div className="fixed inset-0 z-[85]" onClick={() => setShowShareMenu(false)} />
                     
                     <motion.div 
                         initial={{ opacity: 0, y: 20, scale: 0.95 }}
                         animate={{ opacity: 1, y: 0, scale: 1 }}
                         exit={{ opacity: 0, y: 20, scale: 0.95 }}
-                        // Fixed to the bottom center of the screen, just above the FAB
-                        className="fixed bottom-28 left-1/2 -translate-x-1/2 w-64 max-w-[90vw] bg-card border border-border rounded-[1.5rem] shadow-2xl p-2 z-[90] origin-bottom"
+                        transition={{ type: "spring", bounce: 0.2, duration: 0.5 }}
+                        // Adjusted position relative to the new FAB position
+                        className="fixed bottom-[6.5rem] md:bottom-[7.5rem] left-1/2 -translate-x-1/2 w-64 max-w-[90vw] bg-card border border-border rounded-[1.5rem] shadow-[0_20px_50px_-12px_rgba(0,0,0,0.3)] p-2 z-[90] origin-bottom"
                     >
-                        <button onClick={() => setShowVisualShare(true)} className="w-full flex items-center gap-3 px-4 py-3 hover:bg-secondary rounded-xl text-sm font-bold text-primary transition-colors text-left">
+                        <button 
+                            onClick={() => { setShowVisualShare(true); setShowShareMenu(false); }} 
+                            className="w-full flex items-center gap-3 px-4 py-3.5 hover:bg-secondary rounded-xl text-sm font-bold text-primary transition-colors text-left"
+                        >
                             <ImageIcon size={18} /> {t('post.visualShare')}
                         </button>
                         <div className="h-px bg-border my-1"></div>
-                        <button onClick={() => shareToSocial('whatsapp')} className="w-full flex items-center gap-3 px-4 py-3 hover:bg-secondary rounded-xl text-sm text-foreground transition-colors text-left">
+                        <button onClick={() => shareToSocial('whatsapp')} className="w-full flex items-center gap-3 px-4 py-3 hover:bg-secondary rounded-xl text-sm font-medium text-foreground transition-colors text-left">
                             <MessageCircle size={18} className="text-green-500" /> WhatsApp
                         </button>
-                        <button onClick={() => shareToSocial('twitter')} className="w-full flex items-center gap-3 px-4 py-3 hover:bg-secondary rounded-xl text-sm text-foreground transition-colors text-left">
+                        <button onClick={() => shareToSocial('twitter')} className="w-full flex items-center gap-3 px-4 py-3 hover:bg-secondary rounded-xl text-sm font-medium text-foreground transition-colors text-left">
                             <Twitter size={18} className="text-blue-400" /> X / Twitter
                         </button>
-                        <button onClick={() => shareToSocial('linkedin')} className="w-full flex items-center gap-3 px-4 py-3 hover:bg-secondary rounded-xl text-sm text-foreground transition-colors text-left">
+                        <button onClick={() => shareToSocial('linkedin')} className="w-full flex items-center gap-3 px-4 py-3 hover:bg-secondary rounded-xl text-sm font-medium text-foreground transition-colors text-left">
                             <Linkedin size={18} className="text-blue-700" /> LinkedIn
                         </button>
                         <div className="h-px bg-border my-1"></div>
-                        <button onClick={copyToClipboard} className="w-full flex items-center gap-3 px-4 py-3 hover:bg-secondary rounded-xl text-sm text-foreground transition-colors text-left">
+                        <button onClick={copyToClipboard} className="w-full flex items-center gap-3 px-4 py-3 hover:bg-secondary rounded-xl text-sm font-medium text-foreground transition-colors text-left">
                             <LinkIcon size={18} /> {t('post.copyLink')}
                         </button>
                     </motion.div>
@@ -519,31 +519,33 @@ export default function PostView() {
             )}
         </AnimatePresence>
 
-        {/* Selection Mode Floating Bar */}
+        {/* Selection Mode Floating Bar - Ergonomic Redesign */}
         <AnimatePresence>
             {isSelectingText && (
                 <motion.div
-                    initial={{ y: -100, opacity: 0 }}
+                    initial={{ y: 100, opacity: 0 }}
                     animate={{ y: 0, opacity: 1 }}
-                    exit={{ y: -100, opacity: 0 }}
-                    className="fixed top-24 left-0 right-0 z-[100] flex justify-center px-4"
+                    exit={{ y: 100, opacity: 0 }}
+                    transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
+                    // Positioned ergonomically for thumbs
+                    className="fixed bottom-12 md:bottom-16 left-1/2 -translate-x-1/2 z-[100] w-[90%] max-w-fit"
                 >
-                    <div className="bg-foreground text-background rounded-full shadow-2xl px-6 py-4 flex items-center gap-6 max-w-md w-full justify-between">
-                        <div className="flex items-center gap-3">
+                    <div className="bg-foreground text-background rounded-full shadow-[0_16px_40px_-12px_rgba(0,0,0,0.4)] px-6 py-4 flex items-center gap-6 md:gap-8 justify-between border border-border/20">
+                        <div className="flex items-center gap-3 pl-2">
                             <TextCursorInput size={20} className="animate-pulse text-primary" />
-                            <span className="text-sm font-bold">{t('post.selectionInstruction')}</span>
+                            <span className="text-sm font-bold whitespace-nowrap">{t('post.selectionInstruction')}</span>
                         </div>
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-3">
                             <button 
                                 onClick={cancelSelection}
-                                className="p-2 rounded-full hover:bg-background/20 transition-colors"
+                                className="p-2.5 rounded-full hover:bg-background/20 transition-colors text-muted-foreground hover:text-background"
                                 title={t('post.cancelSelection')}
                             >
                                 <X size={18} />
                             </button>
                             <button 
                                 onClick={captureSelection}
-                                className="px-4 py-2 bg-primary text-primary-foreground rounded-full text-xs font-bold hover:scale-105 transition-transform"
+                                className="px-5 py-2.5 bg-primary text-primary-foreground rounded-full text-sm font-bold hover:scale-105 transition-transform whitespace-nowrap shadow-lg shadow-primary/20"
                             >
                                 {t('post.captureSelection')}
                             </button>
@@ -696,8 +698,9 @@ export default function PostView() {
                                         "pl-6 border-l-4",
                                         cardTheme === 'dark' ? "border-[#D4AF37]/50" : "border-[#B8860B]/50"
                                     )}>
+                                        {/* Added whitespace-pre-wrap to preserve newlines for poems/lists */}
                                         <p className={cn(
-                                            "text-xl md:text-2xl leading-relaxed italic font-serif", 
+                                            "text-xl md:text-2xl leading-relaxed italic font-serif whitespace-pre-wrap", 
                                             cardTheme === 'dark' ? "text-zinc-300" : "text-zinc-600"
                                         )}>
                                             "{customExcerpt}"

@@ -471,8 +471,9 @@ export default function Home() {
                                     "pl-6 border-l-4",
                                     cardTheme === 'dark' ? "border-white/20" : "border-zinc-200"
                                 )}>
+                                    {/* Added whitespace-pre-wrap to preserve newlines */}
                                     <p className={cn(
-                                        "text-lg md:text-xl leading-relaxed italic", 
+                                        "text-lg md:text-xl leading-relaxed italic whitespace-pre-wrap", 
                                         cardTheme === 'dark' ? "text-gray-300" : "text-zinc-600"
                                     )}>
                                         "{promoText}"
