@@ -46,7 +46,7 @@ export const Card3D = ({ children, className = "" }: { children: React.ReactNode
         rotateX,
         transformStyle: "preserve-3d",
       }}
-      className={`relative h-96 w-full rounded-xl bg-card border border-border p-6 shadow-xl backdrop-blur-sm transition-all duration-200 ease-out hover:shadow-primary/10 dark:hover:shadow-primary/20 ${className}`}
+      className={`relative h-96 w-full rounded-[2rem] bg-card border border-border p-6 shadow-sm transition-all duration-200 ease-out hover:border-primary/50 ${className}`}
     >
       <div style={{ transform: "translateZ(50px)" }} className="absolute inset-4 flex flex-col">
         {children}

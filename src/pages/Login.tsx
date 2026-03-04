@@ -63,7 +63,7 @@ export default function Login() {
         animate={{ opacity: 1, scale: 1 }}
         className="w-full max-w-md"
       >
-        <div className="bg-card border border-border rounded-2xl p-8 shadow-2xl shadow-black/5">
+        <div className="bg-card border border-border rounded-2xl p-8 shadow-sm">
             <div className="text-center mb-8">
                 <div className="w-12 h-12 bg-primary/10 text-primary rounded-xl flex items-center justify-center mx-auto mb-4">
                     <ShieldCheck size={24} />
@@ -85,7 +85,7 @@ export default function Login() {
                             type="text"
                             value={input}
                             onChange={(e) => setInput(e.target.value)}
-                            className="w-full bg-secondary/50 border border-transparent focus:bg-background focus:border-primary/50 rounded-xl py-3 pl-10 pr-4 text-sm transition-all outline-none font-medium"
+                            className="w-full bg-secondary border border-transparent focus:border-primary rounded-xl py-3 pl-10 pr-4 text-sm transition-all outline-none font-medium"
                             placeholder="2.khaliq OR full email..."
                             required
                         />
@@ -103,7 +103,7 @@ export default function Login() {
                             type="password"
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
-                            className="w-full bg-secondary/50 border border-transparent focus:bg-background focus:border-primary/50 rounded-xl py-3 pl-10 pr-4 text-sm transition-all outline-none font-medium"
+                            className="w-full bg-secondary border border-transparent focus:border-primary rounded-xl py-3 pl-10 pr-4 text-sm transition-all outline-none font-medium"
                             placeholder="••••••••"
                             required
                         />
@@ -127,7 +127,7 @@ export default function Login() {
                 <button
                     type="submit"
                     disabled={loading}
-                    className="w-full py-3.5 rounded-xl bg-primary text-primary-foreground font-bold hover:opacity-90 transition-all flex items-center justify-center gap-2 disabled:opacity-50 shadow-lg shadow-primary/20"
+                    className="w-full py-3.5 rounded-xl bg-primary text-primary-foreground font-bold hover:opacity-90 transition-all flex items-center justify-center gap-2 disabled:opacity-50 shadow-sm"
                 >
                     {loading ? <Loader2 size={18} className="animate-spin" /> : t('auth.signIn')}
                 </button>

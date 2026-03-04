@@ -33,8 +33,7 @@ export default function ScrollToTop() {
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.5, y: 20 }}
           onClick={scrollToTop}
-          // Adjusted positioning: Higher on mobile to avoid overlapping with centered FABs
-          className="fixed bottom-24 md:bottom-8 right-5 md:right-8 z-40 p-3.5 rounded-full bg-primary text-primary-foreground shadow-xl shadow-primary/20 hover:bg-primary/90 hover:scale-105 transition-all group"
+          className="fixed bottom-24 md:bottom-8 right-5 md:right-8 z-40 p-3.5 rounded-full bg-primary text-primary-foreground shadow-sm hover:opacity-90 hover:scale-105 transition-all group"
           aria-label="Scroll to top"
         >
           <ArrowUp size={20} className="group-hover:-translate-y-1 transition-transform" />

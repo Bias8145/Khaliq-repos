@@ -44,10 +44,10 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, x: 20 }}
               className={cn(
-                "pointer-events-auto min-w-[300px] max-w-md p-4 rounded-xl shadow-lg border flex items-start gap-3 backdrop-blur-md",
-                t.type === 'success' ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-600 dark:text-emerald-400" :
-                t.type === 'error' ? "bg-red-500/10 border-red-500/20 text-red-600 dark:text-red-400" :
-                "bg-blue-500/10 border-blue-500/20 text-blue-600 dark:text-blue-400"
+                "pointer-events-auto min-w-[300px] max-w-md p-4 rounded-2xl shadow-md border flex items-start gap-3 bg-card/90 backdrop-blur-xl", 
+                t.type === 'success' ? "border-emerald-500/30 text-emerald-600 dark:text-emerald-400" :
+                t.type === 'error' ? "border-red-500/30 text-red-600 dark:text-red-400" :
+                "border-primary/30 text-primary"
               )}
             >
               <div className="mt-0.5">
@@ -55,10 +55,10 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
                 {t.type === 'error' && <AlertCircle size={18} />}
                 {t.type === 'info' && <Info size={18} />}
               </div>
-              <p className="text-sm font-medium flex-1 leading-relaxed">{t.message}</p>
+              <p className="text-sm font-medium flex-1 leading-relaxed text-foreground">{t.message}</p>
               <button 
                 onClick={() => removeToast(t.id)}
-                className="opacity-50 hover:opacity-100 transition-opacity"
+                className="opacity-50 hover:opacity-100 transition-opacity text-foreground"
               >
                 <X size={16} />
               </button>

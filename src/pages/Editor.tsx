@@ -207,14 +207,14 @@ export default function Editor() {
       />
 
       {/* Top Bar */}
-      <div className="flex justify-between items-center mb-8 sticky top-[5.5rem] z-20 bg-background/80 backdrop-blur-md py-4 border-b border-border/50">
+      <div className="flex justify-between items-center mb-8 sticky top-[5.5rem] z-20 bg-background py-4 border-b border-border">
         <Link to="/repo" className="text-muted-foreground hover:text-foreground flex items-center gap-2 text-xs font-bold uppercase tracking-wider transition-colors group">
           <ArrowLeft size={14} className="group-hover:-translate-x-1 transition-transform" /> {t('editor.back')}
         </Link>
         <div className="flex items-center gap-2">
             <button 
                 onClick={() => setIsPreview(!isPreview)}
-                className="px-4 py-2 bg-secondary/50 text-foreground font-bold rounded-lg hover:bg-secondary transition-all text-xs flex items-center gap-2 mr-2"
+                className="px-4 py-2 bg-secondary text-foreground font-bold rounded-lg hover:bg-secondary/80 transition-all text-xs flex items-center gap-2 mr-2"
             >
                 {isPreview ? <PenLine size={14} /> : <Eye size={14} />}
                 {isPreview ? t('editor.edit') : t('editor.preview')}
@@ -230,7 +230,7 @@ export default function Editor() {
             <button 
                 onClick={() => initiateSave('published')}
                 disabled={loading}
-                className="px-5 py-2 bg-primary text-primary-foreground font-bold rounded-lg hover:opacity-90 transition-all shadow-lg shadow-primary/20 disabled:opacity-50 flex items-center gap-2 text-xs"
+                className="px-5 py-2 bg-primary text-primary-foreground font-bold rounded-lg hover:opacity-90 transition-all shadow-sm disabled:opacity-50 flex items-center gap-2 text-xs"
             >
                 <Save size={14} />
                 {loading ? t('editor.publishing') : t('editor.publish')}
@@ -250,18 +250,18 @@ export default function Editor() {
                 className="w-full bg-transparent border-none text-3xl md:text-5xl font-serif font-bold text-foreground placeholder:text-muted-foreground/30 focus:outline-none focus:ring-0 px-0 leading-tight"
             />
 
-            <div className="border border-border rounded-[2rem] bg-card overflow-hidden shadow-sm focus-within:ring-1 focus-within:ring-primary/50 transition-all min-h-[500px]">
+            <div className="border border-border rounded-[2rem] bg-card overflow-hidden shadow-sm focus-within:border-primary transition-all min-h-[500px]">
                 {/* Toolbar - Only show in Edit mode */}
                 {!isPreview && (
-                    <div className="flex items-center gap-1 p-2 border-b border-border bg-secondary/30 overflow-x-auto sticky top-0 z-10 backdrop-blur-sm">
-                        <button onClick={() => insertFormat('h1')} className="p-2 hover:bg-secondary rounded-md text-muted-foreground hover:text-foreground font-bold text-[10px]" title="Heading 1">H1</button>
-                        <button onClick={() => insertFormat('h2')} className="p-2 hover:bg-secondary rounded-md text-muted-foreground hover:text-foreground font-bold text-[10px]" title="Heading 2">H2</button>
+                    <div className="flex items-center gap-1 p-2 border-b border-border bg-secondary overflow-x-auto sticky top-0 z-10">
+                        <button onClick={() => insertFormat('h1')} className="p-2 hover:bg-card rounded-md text-muted-foreground hover:text-foreground font-bold text-[10px]" title="Heading 1">H1</button>
+                        <button onClick={() => insertFormat('h2')} className="p-2 hover:bg-card rounded-md text-muted-foreground hover:text-foreground font-bold text-[10px]" title="Heading 2">H2</button>
                         <div className="w-px h-4 bg-border mx-1"></div>
-                        <button onClick={() => insertFormat('b')} className="p-2 hover:bg-secondary rounded-md text-muted-foreground hover:text-foreground" title="Bold"><Bold size={16} /></button>
-                        <button onClick={() => insertFormat('i')} className="p-2 hover:bg-secondary rounded-md text-muted-foreground hover:text-foreground" title="Italic"><Italic size={16} /></button>
-                        <button onClick={() => insertFormat('u')} className="p-2 hover:bg-secondary rounded-md text-muted-foreground hover:text-foreground" title="Underline"><Underline size={16} /></button>
+                        <button onClick={() => insertFormat('b')} className="p-2 hover:bg-card rounded-md text-muted-foreground hover:text-foreground" title="Bold"><Bold size={16} /></button>
+                        <button onClick={() => insertFormat('i')} className="p-2 hover:bg-card rounded-md text-muted-foreground hover:text-foreground" title="Italic"><Italic size={16} /></button>
+                        <button onClick={() => insertFormat('u')} className="p-2 hover:bg-card rounded-md text-muted-foreground hover:text-foreground" title="Underline"><Underline size={16} /></button>
                         <div className="w-px h-4 bg-border mx-1"></div>
-                        <button onClick={() => insertFormat('list')} className="p-2 hover:bg-secondary rounded-md text-muted-foreground hover:text-foreground" title="List"><List size={16} /></button>
+                        <button onClick={() => insertFormat('list')} className="p-2 hover:bg-card rounded-md text-muted-foreground hover:text-foreground" title="List"><List size={16} /></button>
                     </div>
                 )}
                 
@@ -318,11 +318,6 @@ export default function Editor() {
                                 <Lock size={16} /> {t('editor.private')}
                             </button>
                         </div>
-                        <p className="text-[10px] text-muted-foreground leading-tight bg-secondary/30 p-2 rounded-md border border-border/50">
-                            {isPublic 
-                                ? t('editor.publicDesc')
-                                : t('editor.privateDesc')}
-                        </p>
                     </div>
 
                     {/* Pin Toggle & Note */}
@@ -339,7 +334,7 @@ export default function Editor() {
                                 )}
                             >
                                 <div className={cn(
-                                    "absolute top-1 left-1 w-3 h-3 rounded-full bg-white transition-transform duration-300 shadow-sm",
+                                    "absolute top-1 left-1 w-3 h-3 rounded-full bg-card transition-transform duration-300 shadow-sm",
                                     isPinned ? "translate-x-5" : "translate-x-0"
                                 )} />
                             </button>
@@ -363,7 +358,7 @@ export default function Editor() {
                                         onChange={(e) => setSummary(e.target.value)}
                                         placeholder={t('editor.pinNoteDesc')}
                                         rows={2}
-                                        className="w-full bg-primary/5 border border-primary/20 rounded-[1rem] p-3 text-sm focus:ring-1 focus:ring-primary/50 outline-none transition-all resize-none"
+                                        className="w-full bg-primary/5 border border-primary/20 rounded-[1rem] p-3 text-sm focus:border-primary outline-none transition-all resize-none"
                                      />
                                  </motion.div>
                              )}
@@ -380,7 +375,7 @@ export default function Editor() {
                                 list="category-suggestions"
                                 value={category}
                                 onChange={(e) => setCategory(e.target.value)}
-                                className="w-full bg-secondary/50 border border-transparent rounded-[1rem] p-3 text-sm font-medium focus:ring-1 focus:ring-primary/20 focus:border-primary outline-none transition-all"
+                                className="w-full bg-secondary border border-transparent rounded-[1rem] p-3 text-sm font-medium focus:border-primary outline-none transition-all"
                                 placeholder={t('editor.selectOrType')}
                             />
                             <datalist id="category-suggestions">
@@ -412,7 +407,7 @@ export default function Editor() {
                                 list="subcategory-suggestions"
                                 value={subcategory}
                                 onChange={(e) => setSubcategory(e.target.value)}
-                                className="w-full bg-secondary/50 border border-transparent rounded-[1rem] p-3 text-sm font-medium focus:ring-1 focus:ring-primary/20 focus:border-primary outline-none transition-all"
+                                className="w-full bg-secondary border border-transparent rounded-[1rem] p-3 text-sm font-medium focus:border-primary outline-none transition-all"
                                 placeholder={t('editor.selectOrType')}
                             />
                             <datalist id="subcategory-suggestions">
@@ -446,7 +441,7 @@ export default function Editor() {
                         onChange={(e) => setExcerpt(e.target.value)}
                         placeholder={t('editor.excerptPlaceholder')}
                         rows={4}
-                        className="w-full bg-secondary/50 border border-transparent rounded-[1rem] p-3 text-sm focus:ring-1 focus:ring-primary/20 focus:border-primary outline-none transition-all resize-none"
+                        className="w-full bg-secondary border border-transparent rounded-[1rem] p-3 text-sm focus:border-primary outline-none transition-all resize-none"
                     />
                 </div>
 

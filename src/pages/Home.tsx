@@ -40,36 +40,30 @@ export default function Home() {
     fetchTrending();
   }, []);
 
-  // ROBUST IMAGE GENERATION: CLONE & CAPTURE
   const generateImageBlob = async (): Promise<Blob | null> => {
     if (!cardRef.current) return null;
     
-    // 1. Clone the node to avoid messing with the UI
     const clone = cardRef.current.cloneNode(true) as HTMLElement;
-    
-    // 2. Style the clone to be fixed width (Desktop Standard) and hidden
     clone.style.position = 'fixed';
     clone.style.top = '-9999px';
     clone.style.left = '-9999px';
-    clone.style.width = '600px'; // Force 600px width for perfect layout
-    clone.style.height = 'auto'; // Let height adjust naturally
+    clone.style.width = '600px'; 
+    clone.style.height = 'auto'; 
     clone.style.zIndex = '-1';
     clone.style.transform = 'none';
-    clone.style.borderRadius = '0'; // Optional: remove radius for cleaner edges in some viewers
+    clone.style.borderRadius = '0'; 
     
-    // Append to body so html2canvas can see it
     document.body.appendChild(clone);
 
     try {
-        // 3. Capture the clone
         const canvas = await html2canvas(clone, {
-            scale: 2, // 2x scale = 1200px width (High Quality)
-            backgroundColor: cardTheme === 'dark' ? '#18181B' : '#FFFFFF',
+            scale: 2,
+            backgroundColor: cardTheme === 'dark' ? '#141414' : '#FAFAFA', 
             useCORS: true,
             logging: false,
             allowTaint: true,
             width: 600,
-            windowWidth: 1200, // Simulate desktop viewport
+            windowWidth: 1200, 
         });
 
         return new Promise(resolve => canvas.toBlob(resolve, 'image/png', 1.0));
@@ -77,7 +71,6 @@ export default function Home() {
         console.error("Capture failed:", err);
         return null;
     } finally {
-        // 4. Clean up
         document.body.removeChild(clone);
     }
   };
@@ -147,13 +140,11 @@ export default function Home() {
           transition={{ duration: 0.8, ease: "easeOut" }}
           className="max-w-5xl mx-auto md:mx-0 relative z-10"
         >
-          {/* Elegant Panel Container */}
-          <div className="bg-card/40 backdrop-blur-sm border border-border/40 rounded-[32px] p-8 md:p-12 relative overflow-hidden shadow-2xl shadow-black/5">
-             <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full blur-[80px] -z-10"></div>
-             <div className="absolute bottom-0 left-0 w-64 h-64 bg-blue-500/5 rounded-full blur-[80px] -z-10"></div>
-
-             <div className="inline-flex items-center gap-3 px-4 py-1.5 mb-8 rounded-full bg-background/50 text-foreground text-[10px] md:text-[11px] font-bold tracking-[0.2em] uppercase border border-border/50">
-                <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse"></span>
+          {/* Flat Solid Panel Container */}
+          <div className="bg-card border border-border rounded-[2.5rem] p-8 md:p-12 relative overflow-hidden shadow-sm">
+             
+             <div className="inline-flex items-center gap-3 px-4 py-1.5 mb-8 rounded-full bg-secondary text-foreground text-[10px] md:text-[11px] font-bold tracking-[0.2em] uppercase border border-border/50">
+                <span className="w-1.5 h-1.5 rounded-full bg-primary"></span>
                 {t('home.badge')}
              </div>
              
@@ -169,12 +160,12 @@ export default function Home() {
              </p>
              
              <div className="flex flex-wrap gap-4 justify-center md:justify-start">
-                <Link to="/repo" className="px-8 py-4 rounded-full bg-foreground text-background text-sm font-bold hover:bg-foreground/90 transition-all flex items-center gap-2 shadow-xl shadow-foreground/10 hover:-translate-y-1">
+                <Link to="/repo" className="px-8 py-4 rounded-full bg-foreground text-background text-sm font-bold hover:bg-foreground/90 transition-all flex items-center gap-2 hover:-translate-y-1">
                   {t('home.explore')} <ArrowRight size={16} />
                 </Link>
                 <button 
                     onClick={() => setShowPromoteModal(true)}
-                    className="px-8 py-4 rounded-full border border-border text-foreground text-sm font-bold hover:bg-secondary/50 transition-all backdrop-blur-sm flex items-center gap-2"
+                    className="px-8 py-4 rounded-full border border-border text-foreground text-sm font-bold hover:bg-secondary transition-all flex items-center gap-2 bg-card"
                 >
                   <Share2 size={16} /> {t('home.promoteBtn')}
                 </button>
@@ -193,7 +184,7 @@ export default function Home() {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 {trendingPosts.map((post, i) => (
                     <Link key={post.id} to={`/post/${post.id}`} className="group block">
-                        <div className="bg-card border border-border rounded-2xl p-6 hover:border-primary/30 transition-all hover:shadow-lg hover:shadow-primary/5 h-full flex flex-col justify-between">
+                        <div className="bg-card border border-border rounded-[2rem] p-6 hover:border-primary/50 transition-all h-full flex flex-col justify-between shadow-sm">
                             <div>
                                 <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-2 block">
                                     0{i+1} &mdash; {post.category}
@@ -246,15 +237,15 @@ export default function Home() {
 
         <div className="grid grid-cols-1 md:grid-cols-3 md:grid-rows-2 gap-6 h-auto md:h-[600px]">
             {/* Main Profile Card */}
-            <div className="md:col-span-2 md:row-span-2 bg-card border border-border rounded-3xl p-6 md:p-10 relative overflow-hidden group hover:border-primary/30 transition-colors">
-                <div className="absolute top-0 right-0 p-10 opacity-10 group-hover:opacity-20 transition-opacity">
+            <div className="md:col-span-2 md:row-span-2 bg-card border border-border rounded-[2.5rem] p-6 md:p-10 relative overflow-hidden group hover:border-primary/50 transition-colors shadow-sm">
+                <div className="absolute top-0 right-0 p-10 opacity-5 group-hover:opacity-10 transition-opacity">
                     <Feather size={200} className="text-primary rotate-12" />
                 </div>
                 
                 <div className="relative z-10 h-full flex flex-col justify-between">
                     <div>
                         <div className="flex items-center gap-4 mb-6">
-                            <div className="w-16 h-16 md:w-20 md:h-20 rounded-full bg-secondary border border-primary/20 flex items-center justify-center text-primary relative overflow-hidden">
+                            <div className="w-16 h-16 md:w-20 md:h-20 rounded-full bg-secondary border border-border flex items-center justify-center text-primary relative overflow-hidden">
                                 <User size={32} className="relative z-10" />
                             </div>
                             <div className="flex flex-col justify-center">
@@ -277,7 +268,7 @@ export default function Home() {
             </div>
 
             {/* Education Card */}
-            <div className="bg-secondary/30 border border-border rounded-3xl p-6 md:p-8 flex flex-col justify-center hover:border-primary/30 transition-colors relative overflow-hidden group">
+            <div className="bg-secondary border border-border rounded-[2.5rem] p-6 md:p-8 flex flex-col justify-center hover:border-primary/50 transition-colors relative overflow-hidden group shadow-sm">
                 <div className="absolute -bottom-4 -right-4 text-primary/10 group-hover:text-primary/20 transition-colors rotate-[-15deg]">
                     <GraduationCap size={120} />
                 </div>
@@ -291,8 +282,8 @@ export default function Home() {
             </div>
 
             {/* Open Source / XDA Card */}
-            <div className="bg-secondary/30 border border-border rounded-3xl p-6 md:p-8 flex flex-col justify-center relative overflow-hidden group">
-                <div className="absolute top-4 right-4 text-primary/20 group-hover:text-primary/40 transition-colors">
+            <div className="bg-secondary border border-border rounded-[2.5rem] p-6 md:p-8 flex flex-col justify-center relative overflow-hidden group shadow-sm">
+                <div className="absolute top-4 right-4 text-primary/10 group-hover:text-primary/20 transition-colors">
                     <Terminal size={48} />
                 </div>
                 <div className="relative z-10">
@@ -332,7 +323,7 @@ export default function Home() {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                className="fixed inset-0 z-[100] bg-background/95 backdrop-blur-md flex items-center justify-center p-4 overflow-y-auto"
+                className="fixed inset-0 z-[100] bg-background/95 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto"
             >
                 <div className="relative w-full max-w-2xl flex flex-col items-center my-auto">
                     <div className="text-center mb-6">
@@ -341,24 +332,24 @@ export default function Home() {
                     </div>
 
                     {/* Controls */}
-                    <div className="w-full bg-card border border-border rounded-2xl p-5 mb-6 shadow-lg space-y-5">
+                    <div className="w-full bg-card/90 backdrop-blur-xl border border-border/50 rounded-[2rem] p-5 mb-6 shadow-md space-y-5">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             {/* Size Selector */}
                             <div className="space-y-2">
                                 <span className="text-xs font-bold uppercase text-muted-foreground flex items-center gap-2">
                                     <Maximize size={14} /> {t('post.cardSize')}
                                 </span>
-                                <div className="grid grid-cols-4 gap-1 bg-secondary rounded-lg p-1">
-                                    <button onClick={() => setAspectRatio('auto')} className={cn("py-2 rounded-md transition-all flex justify-center", aspectRatio === 'auto' ? "bg-background shadow-sm text-primary" : "text-muted-foreground")} title={t('post.sizes.auto')}>
+                                <div className="grid grid-cols-4 gap-1 bg-secondary/80 rounded-full p-1 border border-border/50">
+                                    <button onClick={() => setAspectRatio('auto')} className={cn("py-2 rounded-full transition-all flex justify-center", aspectRatio === 'auto' ? "bg-card shadow-sm text-primary border border-border/50" : "text-muted-foreground hover:text-foreground")} title={t('post.sizes.auto')}>
                                         <Layout size={16} />
                                     </button>
-                                    <button onClick={() => setAspectRatio('portrait')} className={cn("py-2 rounded-md transition-all flex justify-center", aspectRatio === 'portrait' ? "bg-background shadow-sm text-primary" : "text-muted-foreground")} title={t('post.sizes.portrait')}>
+                                    <button onClick={() => setAspectRatio('portrait')} className={cn("py-2 rounded-full transition-all flex justify-center", aspectRatio === 'portrait' ? "bg-card shadow-sm text-primary border border-border/50" : "text-muted-foreground hover:text-foreground")} title={t('post.sizes.portrait')}>
                                         <Smartphone size={16} />
                                     </button>
-                                    <button onClick={() => setAspectRatio('square')} className={cn("py-2 rounded-md transition-all flex justify-center", aspectRatio === 'square' ? "bg-background shadow-sm text-primary" : "text-muted-foreground")} title={t('post.sizes.square')}>
+                                    <button onClick={() => setAspectRatio('square')} className={cn("py-2 rounded-full transition-all flex justify-center", aspectRatio === 'square' ? "bg-card shadow-sm text-primary border border-border/50" : "text-muted-foreground hover:text-foreground")} title={t('post.sizes.square')}>
                                         <Square size={16} />
                                     </button>
-                                    <button onClick={() => setAspectRatio('story')} className={cn("py-2 rounded-md transition-all flex justify-center", aspectRatio === 'story' ? "bg-background shadow-sm text-primary" : "text-muted-foreground")} title={t('post.sizes.story')}>
+                                    <button onClick={() => setAspectRatio('story')} className={cn("py-2 rounded-full transition-all flex justify-center", aspectRatio === 'story' ? "bg-card shadow-sm text-primary border border-border/50" : "text-muted-foreground hover:text-foreground")} title={t('post.sizes.story')}>
                                         <Smartphone size={16} className="scale-y-110" />
                                     </button>
                                 </div>
@@ -370,16 +361,16 @@ export default function Home() {
                                     <span className="text-xs font-bold uppercase text-muted-foreground flex items-center gap-2">
                                         <Sun size={14} /> {t('post.cardTheme')}
                                     </span>
-                                    <div className="flex bg-secondary rounded-lg p-1">
+                                    <div className="flex bg-secondary/80 rounded-full p-1 border border-border/50">
                                         <button 
                                             onClick={() => setCardTheme('dark')}
-                                            className={cn("flex-1 py-1.5 rounded-md text-xs font-bold transition-all flex items-center justify-center gap-2", cardTheme === 'dark' ? "bg-background shadow-sm text-primary" : "text-muted-foreground")}
+                                            className={cn("flex-1 py-1.5 rounded-full text-xs font-bold transition-all flex items-center justify-center gap-2", cardTheme === 'dark' ? "bg-card shadow-sm text-primary border border-border/50" : "text-muted-foreground hover:text-foreground")}
                                         >
                                             <Moon size={12} /> Dark
                                         </button>
                                         <button 
                                             onClick={() => setCardTheme('light')}
-                                            className={cn("flex-1 py-1.5 rounded-md text-xs font-bold transition-all flex items-center justify-center gap-2", cardTheme === 'light' ? "bg-background shadow-sm text-primary" : "text-muted-foreground")}
+                                            className={cn("flex-1 py-1.5 rounded-full text-xs font-bold transition-all flex items-center justify-center gap-2", cardTheme === 'light' ? "bg-card shadow-sm text-primary border border-border/50" : "text-muted-foreground hover:text-foreground")}
                                         >
                                             <Sun size={12} /> Light
                                         </button>
@@ -399,7 +390,7 @@ export default function Home() {
                                     <textarea 
                                         value={promoText}
                                         onChange={(e) => setPromoText(e.target.value)}
-                                        className="w-full bg-secondary/50 border border-transparent rounded-lg p-3 text-sm focus:ring-1 focus:ring-primary/20 focus:border-primary outline-none transition-all resize-none h-16"
+                                        className="w-full bg-secondary/80 border border-border/50 rounded-[1.5rem] p-3 text-sm focus:border-primary outline-none transition-all resize-none h-16"
                                         placeholder="Enter your promotional message..."
                                     />
                                 </div>
@@ -407,7 +398,7 @@ export default function Home() {
                         </div>
                     </div>
 
-                    {/* REBUILT SHARE CARD - Adapted to Reference Image */}
+                    {/* REBUILT SHARE CARD - Solid Gold Theme */}
                     <div className="w-full flex justify-center mb-6">
                         <div 
                             ref={cardRef}
@@ -417,24 +408,17 @@ export default function Home() {
                                 aspectRatio === 'portrait' ? "aspect-[4/5]" : 
                                 aspectRatio === 'story' ? "aspect-[9/16]" : 
                                 "min-h-[500px] h-auto",
-                                cardTheme === 'dark' ? "bg-[#18181B] text-white" : "bg-white text-zinc-900"
+                                cardTheme === 'dark' ? "bg-[#141414] text-[#E5E5E5]" : "bg-[#FAFAFA] text-[#1A1A1A]"
                             )}
                             style={{ 
                                 borderRadius: '24px',
-                                border: cardTheme === 'dark' ? '1px solid #27272A' : '1px solid #E4E4E7',
-                                boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.15)'
+                                border: cardTheme === 'dark' ? '1px solid #2E2E2E' : '1px solid #E0E0E0',
                             }}
                         >
                             {/* Background Elements */}
-                            <div className={cn("absolute inset-0", cardTheme === 'dark' ? "bg-[#18181B]" : "bg-[#FAFAFA]")}></div>
+                            <div className={cn("absolute inset-0", cardTheme === 'dark' ? "bg-[#141414]" : "bg-[#FAFAFA]")}></div>
                             
-                            {/* Top Right Curve Decoration */}
-                            <div className={cn(
-                                "absolute -top-20 -right-20 w-64 h-64 rounded-full opacity-50",
-                                cardTheme === 'dark' ? "bg-white/5" : "bg-black/5"
-                            )}></div>
-                            
-                            {/* Large Background Icon - Subtle Watermark */}
+                            {/* Large Background Icon - Very Subtle */}
                             <div className="absolute top-1/2 right-0 -translate-y-1/2 translate-x-1/4 opacity-[0.03] pointer-events-none">
                                 <PenTool size={400} className={cn("rotate-[-10deg]", cardTheme === 'dark' ? "text-white" : "text-black")} />
                             </div>
@@ -443,15 +427,15 @@ export default function Home() {
                             <div className="relative z-10 flex items-center gap-4 mb-12">
                                 <div className={cn(
                                     "w-10 h-10 rounded-full border flex items-center justify-center",
-                                    cardTheme === 'dark' ? "border-white/20 bg-white/5 text-white" : "border-black/10 bg-white text-black"
+                                    cardTheme === 'dark' ? "border-[#CBAE70]/30 bg-[#CBAE70]/10 text-[#CBAE70]" : "border-[#B39559]/30 bg-[#B39559]/10 text-[#B39559]"
                                 )}>
                                     <Feather size={18} />
                                 </div>
                                 <div className="flex flex-col">
-                                    <span className={cn("text-xs font-bold tracking-widest uppercase", cardTheme === 'dark' ? "text-white" : "text-zinc-900")}>
+                                    <span className={cn("text-xs font-bold tracking-widest uppercase", cardTheme === 'dark' ? "text-[#E5E5E5]" : "text-[#1A1A1A]")}>
                                         Khaliq Repository
                                     </span>
-                                    <span className={cn("text-[10px] tracking-wider uppercase opacity-60", cardTheme === 'dark' ? "text-white" : "text-zinc-900")}>
+                                    <span className={cn("text-[10px] tracking-wider uppercase opacity-60", cardTheme === 'dark' ? "text-[#E5E5E5]" : "text-[#1A1A1A]")}>
                                         Digital Garden & Archive
                                     </span>
                                 </div>
@@ -461,7 +445,7 @@ export default function Home() {
                             <div className="relative z-10 flex-grow flex flex-col justify-center mb-8">
                                 <h2 className={cn(
                                     "text-4xl md:text-5xl font-bold tracking-tight mb-8 font-sans leading-[1.1]", 
-                                    cardTheme === 'dark' ? "text-white" : "text-zinc-900"
+                                    cardTheme === 'dark' ? "text-[#E5E5E5]" : "text-[#1A1A1A]"
                                 )}>
                                     Bias Fajar Khaliq
                                 </h2>
@@ -469,12 +453,11 @@ export default function Home() {
                                 {/* Quote / Excerpt with Bar */}
                                 <div className={cn(
                                     "pl-6 border-l-4",
-                                    cardTheme === 'dark' ? "border-white/20" : "border-zinc-200"
+                                    cardTheme === 'dark' ? "border-[#CBAE70]/50" : "border-[#B39559]/50"
                                 )}>
-                                    {/* Added whitespace-pre-wrap to preserve newlines */}
                                     <p className={cn(
                                         "text-lg md:text-xl leading-relaxed italic whitespace-pre-wrap", 
-                                        cardTheme === 'dark' ? "text-gray-300" : "text-zinc-600"
+                                        cardTheme === 'dark' ? "text-[#A3A3A3]" : "text-[#666666]"
                                     )}>
                                         "{promoText}"
                                     </p>
@@ -484,27 +467,27 @@ export default function Home() {
                             {/* Footer */}
                             <div className={cn(
                                 "relative z-10 pt-8 border-t flex items-end justify-between w-full", 
-                                cardTheme === 'dark' ? "border-white/10" : "border-black/5"
+                                cardTheme === 'dark' ? "border-[#2E2E2E]" : "border-[#E0E0E0]"
                             )}>
-                                {/* Left: Website URL (Replaces Author Info) */}
+                                {/* Left: Website URL */}
                                 <div className="flex items-center gap-2">
                                      <div className={cn(
                                         "w-8 h-8 rounded-full flex items-center justify-center",
-                                        cardTheme === 'dark' ? "bg-white text-black" : "bg-black text-white"
+                                        cardTheme === 'dark' ? "bg-[#E5E5E5] text-[#141414]" : "bg-[#1A1A1A] text-[#FAFAFA]"
                                      )}>
                                         <Globe size={14} />
                                      </div>
-                                     <span className={cn("text-xs font-bold tracking-wide", cardTheme === 'dark' ? "text-white" : "text-zinc-900")}>
+                                     <span className={cn("text-xs font-bold tracking-wide", cardTheme === 'dark' ? "text-[#E5E5E5]" : "text-[#1A1A1A]")}>
                                         khaliq-repos.pages.dev
                                      </span>
                                 </div>
 
                                 {/* Right: Date & Meta */}
                                 <div className="text-right">
-                                    <p className={cn("text-[10px] uppercase tracking-wider opacity-60 mb-1", cardTheme === 'dark' ? "text-white" : "text-zinc-900")}>
+                                    <p className={cn("text-[10px] uppercase tracking-wider opacity-60 mb-1", cardTheme === 'dark' ? "text-[#E5E5E5]" : "text-[#1A1A1A]")}>
                                         {new Date().getFullYear()}
                                     </p>
-                                    <p className={cn("text-xs font-bold", cardTheme === 'dark' ? "text-white" : "text-zinc-900")}>
+                                    <p className={cn("text-xs font-bold", cardTheme === 'dark' ? "text-[#E5E5E5]" : "text-[#1A1A1A]")}>
                                         Portfolio & Research
                                     </p>
                                 </div>
@@ -517,7 +500,7 @@ export default function Home() {
                         <button 
                             onClick={handleSmartShare}
                             disabled={generating}
-                            className="px-8 py-4 bg-primary text-primary-foreground font-bold rounded-full shadow-xl shadow-primary/20 hover:scale-105 transition-transform flex items-center justify-center gap-3 text-sm"
+                            className="px-8 py-4 bg-primary text-primary-foreground font-bold rounded-full hover:opacity-90 transition-opacity flex items-center justify-center gap-3 text-sm"
                         >
                             {generating ? <Loader2 size={18} className="animate-spin" /> : <Send size={18} />}
                             {t('home.promote.share')}
@@ -526,7 +509,7 @@ export default function Home() {
                         <button 
                             onClick={handleDownloadCard}
                             disabled={generating}
-                            className="px-8 py-4 bg-secondary text-foreground font-bold rounded-full shadow-lg hover:scale-105 transition-transform flex items-center justify-center gap-3 text-sm"
+                            className="px-8 py-4 bg-secondary/80 text-foreground font-bold rounded-full hover:bg-secondary transition-colors flex items-center justify-center gap-3 text-sm"
                         >
                             {generating ? <Loader2 size={18} className="animate-spin" /> : <Download size={18} />}
                             {t('home.promote.download')}
@@ -534,7 +517,7 @@ export default function Home() {
 
                         <button 
                             onClick={() => setShowPromoteModal(false)}
-                            className="px-8 py-4 bg-transparent border border-border text-muted-foreground hover:text-foreground font-bold rounded-full hover:bg-secondary transition-colors flex items-center justify-center gap-2 text-sm"
+                            className="px-8 py-4 bg-transparent border border-border/50 text-muted-foreground hover:text-foreground font-bold rounded-full hover:bg-secondary/80 transition-colors flex items-center justify-center gap-2 text-sm"
                         >
                             <X size={18} />
                             {t('post.close')}
@@ -556,9 +539,9 @@ function FeatureCard({ icon, title, desc, delay }: { icon: React.ReactNode, titl
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ delay, duration: 0.5 }}
-          className="p-6 md:p-8 rounded-3xl bg-card border border-border hover:border-primary/30 hover:shadow-2xl hover:shadow-primary/5 transition-all group"
+          className="p-6 md:p-8 rounded-[2.5rem] bg-card border border-border hover:border-primary/50 transition-all group shadow-sm"
         >
-          <div className="w-12 h-12 md:w-14 md:h-14 bg-secondary rounded-2xl flex items-center justify-center text-foreground mb-6 group-hover:bg-primary group-hover:text-primary-foreground transition-colors duration-300 shadow-sm">
+          <div className="w-12 h-12 md:w-14 md:h-14 bg-secondary rounded-2xl flex items-center justify-center text-foreground mb-6 group-hover:bg-primary group-hover:text-primary-foreground transition-colors duration-300">
             {icon}
           </div>
           <h3 className="text-lg md:text-xl font-bold mb-3 font-serif">{title}</h3>
@@ -571,7 +554,7 @@ function FeatureCard({ icon, title, desc, delay }: { icon: React.ReactNode, titl
 
 function TechBadge({ icon, label }: { icon: React.ReactNode, label: string }) {
     return (
-        <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-secondary/50 border border-border text-[10px] md:text-xs font-bold text-foreground">
+        <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-secondary border border-border text-[10px] md:text-xs font-bold text-foreground">
             {icon} {label}
         </span>
     )

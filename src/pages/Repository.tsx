@@ -1,8 +1,8 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { supabase, type Post } from '../lib/supabase';
 import { format } from 'date-fns';
-import { Eye, EyeOff, Plus, Search, ChevronRight, Filter, Layers, Trash2, Heart, Users, MousePointerClick, TrendingUp, Archive, Pin, PinOff, User, ExternalLink, Github, Cpu, Database, Smartphone, LayoutGrid, List, ChevronDown, Clock, X, Link as LinkIcon } from 'lucide-react';
+import { Eye, EyeOff, Plus, Search, ChevronRight, Filter, Layers, Trash2, Heart, Users, MousePointerClick, TrendingUp, Archive, Pin, PinOff, User, ExternalLink, Github, Cpu, Database, Smartphone, LayoutGrid, List, ChevronDown, Clock, X, Link as LinkIcon, Edit3, Hash } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn, calculateReadingTime } from '../lib/utils';
 import { useToast } from '../components/ui/Toast';
@@ -90,6 +90,17 @@ export default function Repository() {
       setLoading(false);
     }
   };
+
+  // Extract unique subcategories for the "Topics" cloud
+  const uniqueTopics = useMemo(() => {
+    const topics = new Set<string>();
+    posts.forEach(post => {
+        if (post.subcategory && post.is_public) {
+            topics.add(post.subcategory);
+        }
+    });
+    return Array.from(topics).slice(0, 8); // Top 8 topics
+  }, [posts]);
 
   // Toggle Accordion Panel
   const toggleExpand = (e: React.MouseEvent, id: string) => {
@@ -198,7 +209,8 @@ export default function Repository() {
     if (activeTab === 'Drafts') {
         filtered = filtered.filter(p => p.status === 'draft');
     } else if (activeTab !== 'All') {
-        filtered = filtered.filter(p => p.category === activeTab);
+        // Allow filtering by subcategory as well if clicked from Topics cloud
+        filtered = filtered.filter(p => p.category === activeTab || p.subcategory === activeTab);
     }
 
     if (searchQuery) {
@@ -260,7 +272,7 @@ export default function Repository() {
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
                 <div>
                     <div className="inline-flex items-center gap-3 px-4 py-1.5 mb-4 rounded-full bg-secondary text-foreground text-[10px] font-bold tracking-[0.2em] uppercase border border-border/50">
-                        <span className="w-2 h-2 rounded-full bg-primary animate-pulse shadow-[0_0_8px_rgba(212,175,55,0.8)]"></span>
+                        <span className="w-2 h-2 rounded-full bg-primary"></span>
                         Digital Garden
                     </div>
                     <h1 className="text-3xl md:text-5xl font-serif font-bold text-foreground mb-3 tracking-tight">
@@ -272,25 +284,25 @@ export default function Repository() {
                 </div>
                 
                 {isAdmin && (
-                    <Link to="/editor/new" className="flex items-center gap-2 px-6 py-4 rounded-full bg-primary text-primary-foreground font-bold hover:opacity-90 transition-all shadow-xl shadow-primary/20 group shrink-0">
+                    <Link to="/editor/new" className="flex items-center gap-2 px-6 py-4 rounded-full bg-primary text-primary-foreground font-bold hover:opacity-90 transition-all group shrink-0 shadow-sm">
                         <Plus size={20} className="group-hover:rotate-90 transition-transform" /> 
                         {t('repo.newEntry')}
                     </Link>
                 )}
             </div>
 
-            {/* Filters & Search - Floating Dock */}
-            <div className="bg-card/90 backdrop-blur-2xl border border-border/50 rounded-[2rem] p-3 shadow-lg shadow-black/5 flex flex-col md:flex-row gap-4 justify-between items-center sticky top-[6.5rem] z-30 transition-all">
+            {/* Filters & Search - Frosted Dock */}
+            <div className="bg-card/80 backdrop-blur-xl border border-border/50 rounded-[2rem] p-3 shadow-sm flex flex-col md:flex-row gap-4 justify-between items-center sticky top-[6.5rem] z-30 transition-all">
                 
                 {/* Segmented Control Style Tabs */}
-                <div className="flex gap-1 overflow-x-auto w-full md:w-auto p-1 bg-secondary/30 rounded-[1.5rem] no-scrollbar">
+                <div className="flex gap-1 overflow-x-auto w-full md:w-auto p-1 bg-secondary/50 rounded-[1.5rem] no-scrollbar border border-border/50">
                     {tabs.map(tab => (
                         <button
                             key={tab.id}
                             onClick={() => setActiveTab(tab.id)}
                             className={cn(
                                 "px-5 py-2 rounded-[1.2rem] text-sm font-bold transition-all whitespace-nowrap",
-                                activeTab === tab.id ? "bg-background text-foreground shadow-sm ring-1 ring-border" : "text-muted-foreground hover:text-foreground"
+                                activeTab === tab.id ? "bg-card text-foreground shadow-sm border border-border/50" : "text-muted-foreground hover:text-foreground"
                             )}
                         >
                             {tab.label}
@@ -306,27 +318,27 @@ export default function Repository() {
                             placeholder={t('repo.search')} 
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
-                            className="w-full bg-secondary/50 border border-transparent rounded-full py-3 pl-12 pr-10 text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all"
+                            className="w-full bg-secondary/50 border border-border/50 rounded-full py-3 pl-12 pr-10 text-sm focus:border-primary outline-none transition-all"
                         />
                         {searchQuery && (
                             <button 
                                 onClick={() => setSearchQuery('')}
-                                className="absolute right-3 p-1.5 rounded-full bg-background text-muted-foreground hover:text-foreground shadow-sm"
+                                className="absolute right-3 p-1.5 rounded-full bg-card text-muted-foreground hover:text-foreground shadow-sm border border-border/50"
                             >
                                 <X size={14} />
                             </button>
                         )}
                     </div>
-                    <div className="hidden md:flex bg-secondary/30 rounded-full p-1 border border-border/50">
+                    <div className="hidden md:flex bg-secondary/50 rounded-full p-1 border border-border/50">
                         <button 
                             onClick={() => setViewMode('list')} 
-                            className={cn("p-2 rounded-full transition-colors", viewMode === 'list' ? "bg-background shadow-sm text-primary" : "text-muted-foreground hover:text-foreground")}
+                            className={cn("p-2 rounded-full transition-colors", viewMode === 'list' ? "bg-card shadow-sm text-primary border border-border/50" : "text-muted-foreground hover:text-foreground")}
                         >
                             <List size={16} />
                         </button>
                         <button 
                             onClick={() => setViewMode('grid')} 
-                            className={cn("p-2 rounded-full transition-colors", viewMode === 'grid' ? "bg-background shadow-sm text-primary" : "text-muted-foreground hover:text-foreground")}
+                            className={cn("p-2 rounded-full transition-colors", viewMode === 'grid' ? "bg-card shadow-sm text-primary border border-border/50" : "text-muted-foreground hover:text-foreground")}
                         >
                             <LayoutGrid size={16} />
                         </button>
@@ -352,37 +364,30 @@ export default function Repository() {
                             exit={{ opacity: 0, scale: 0.95 }}
                             transition={{ delay: index * 0.05, duration: 0.2 }}
                             className={cn(
-                                "bg-card border rounded-[2rem] transition-all duration-300 relative overflow-hidden flex flex-col",
-                                post.status === 'draft' ? "border-orange-500/30 bg-orange-500/5" : "border-border hover:border-primary/30",
-                                viewMode === 'list' ? "p-5 md:p-6" : "p-6 md:p-8 hover:shadow-xl hover:shadow-primary/5 h-full"
+                                "bg-card border rounded-[2rem] transition-all duration-300 relative overflow-hidden flex flex-col shadow-sm",
+                                post.status === 'draft' ? "border-orange-500/30 bg-orange-500/5" : "border-border hover:border-primary/50",
+                                viewMode === 'list' ? "p-5 md:p-6" : "p-6 md:p-8 h-full"
                             )}
                         >
                             {post.status === 'draft' && (
-                                <div className="absolute top-0 right-0 px-4 py-1.5 bg-orange-500 text-white text-[10px] font-bold uppercase tracking-wider rounded-bl-2xl">
+                                <div className="absolute top-0 right-0 px-4 py-1.5 bg-orange-500 text-white text-[10px] font-bold uppercase tracking-wider rounded-bl-2xl z-20">
                                     Draft
                                 </div>
                             )}
 
-                            {/* Pinned Post Indicator & Note */}
+                            {/* Redesigned Pinned Badge (Absolute Top Right) */}
                             {post.is_pinned && (
-                                <div className="mb-5 bg-primary/5 border border-primary/20 rounded-[1.5rem] p-4 flex flex-col gap-2">
-                                    <div className="flex items-center gap-2 text-primary text-xs font-bold uppercase tracking-wider">
-                                        <Pin size={14} className="fill-current" /> Pinned
-                                    </div>
-                                    {post.summary && (
-                                        <p className="text-sm text-foreground/80 italic border-l-2 border-primary/50 pl-3 py-0.5">
-                                            "{post.summary}"
-                                        </p>
-                                    )}
+                                <div className="absolute top-4 right-4 z-10 flex items-center gap-1.5 px-3 py-1.5 bg-primary/10 backdrop-blur-md border border-primary/20 rounded-full text-[10px] font-bold text-primary uppercase tracking-wider">
+                                    <Pin size={12} className="fill-current" /> Pinned
                                 </div>
                             )}
 
                             {/* Compact Header (Always Visible) */}
                             <div 
-                                className={cn("flex flex-col md:flex-row md:items-center justify-between gap-4 cursor-pointer group", viewMode === 'grid' && "mb-5")}
+                                className={cn("flex flex-col md:flex-row md:items-center justify-between gap-4 cursor-pointer group relative z-10", viewMode === 'grid' && "mb-5")}
                                 onClick={(e) => viewMode === 'list' ? toggleExpand(e, post.id) : null}
                             >
-                                <div className="flex flex-wrap items-center gap-2">
+                                <div className="flex flex-wrap items-center gap-2 pr-20"> {/* pr-20 to avoid overlap with pin badge */}
                                     <span className={cn(
                                         "px-3 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-wider border",
                                         post.category === 'Catatan' ? "bg-blue-500/10 text-blue-600 border-blue-500/20" :
@@ -393,7 +398,7 @@ export default function Repository() {
                                     </span>
                                     
                                     {post.subcategory && (
-                                        <span className="flex items-center gap-1.5 text-xs text-muted-foreground font-medium bg-secondary/50 px-3 py-1.5 rounded-full">
+                                        <span className="flex items-center gap-1.5 text-xs text-muted-foreground font-medium bg-secondary px-3 py-1.5 rounded-full">
                                             {post.subcategory}
                                         </span>
                                     )}
@@ -404,7 +409,7 @@ export default function Repository() {
                                         <Clock size={12} /> {format(new Date(post.created_at), 'MMM d, yyyy')}
                                     </span>
                                     {viewMode === 'list' && (
-                                        <button className="p-1.5 rounded-full bg-secondary/50 text-muted-foreground group-hover:bg-primary/10 group-hover:text-primary transition-colors">
+                                        <button className="p-1.5 rounded-full bg-secondary text-muted-foreground group-hover:bg-primary/10 group-hover:text-primary transition-colors">
                                             <ChevronDown size={16} className={cn("transition-transform duration-300", isExpanded && "rotate-180")} />
                                         </button>
                                     )}
@@ -412,10 +417,20 @@ export default function Repository() {
                             </div>
 
                             {/* Title - Clickable to go to post */}
-                            <Link to={`/post/${post.id}`} className={cn("block mt-3", viewMode === 'grid' && "flex-grow")}>
-                                <h3 className="text-xl md:text-2xl font-serif font-bold text-foreground hover:text-primary transition-colors leading-tight">
+                            <Link to={`/post/${post.id}`} className={cn("block mt-3 relative z-10", viewMode === 'grid' && "flex-grow")}>
+                                <h3 className="text-xl md:text-2xl font-serif font-bold text-foreground hover:text-primary transition-colors leading-tight pr-10">
                                     {post.title}
                                 </h3>
+                                
+                                {/* Redesigned Pin Note (Elegant Blockquote) */}
+                                {post.is_pinned && post.summary && (
+                                    <div className="mt-4 mb-2 pl-4 border-l-2 border-primary/40">
+                                        <p className="text-sm text-foreground/80 italic font-serif leading-relaxed">
+                                            "{post.summary}"
+                                        </p>
+                                    </div>
+                                )}
+
                                 {viewMode === 'grid' && (
                                     <p className="text-muted-foreground text-sm line-clamp-2 leading-relaxed mt-3">
                                         {post.excerpt || post.content.substring(0, 150) + "..."}
@@ -430,9 +445,9 @@ export default function Repository() {
                                         initial={viewMode === 'list' ? { height: 0, opacity: 0, marginTop: 0 } : false}
                                         animate={viewMode === 'list' ? { height: 'auto', opacity: 1, marginTop: 16 } : false}
                                         exit={viewMode === 'list' ? { height: 0, opacity: 0, marginTop: 0 } : false}
-                                        className="overflow-hidden"
+                                        className="overflow-hidden relative z-10"
                                     >
-                                        <div className={cn("flex flex-col gap-4", viewMode === 'grid' ? "mt-6 pt-5 border-t border-border/50" : "pt-4 border-t border-border/50")}>
+                                        <div className={cn("flex flex-col gap-4", viewMode === 'grid' ? "mt-6 pt-5 border-t border-border" : "pt-4 border-t border-border")}>
                                             
                                             {viewMode === 'list' && (
                                                 <p className="text-muted-foreground text-sm leading-relaxed">
@@ -442,13 +457,13 @@ export default function Repository() {
 
                                             <div className="flex items-center justify-between w-full flex-wrap gap-4">
                                                 <div className="flex items-center gap-3 text-muted-foreground">
-                                                    <span className="flex items-center gap-1.5 text-xs font-medium bg-secondary/50 px-3 py-1.5 rounded-full" title="Views">
+                                                    <span className="flex items-center gap-1.5 text-xs font-medium bg-secondary px-3 py-1.5 rounded-full" title="Views">
                                                         <Eye size={14} /> {post.view_count || 0}
                                                     </span>
-                                                    <span className="flex items-center gap-1.5 text-xs font-medium bg-secondary/50 px-3 py-1.5 rounded-full" title="Likes">
+                                                    <span className="flex items-center gap-1.5 text-xs font-medium bg-secondary px-3 py-1.5 rounded-full" title="Likes">
                                                         <Heart size={14} /> {post.likes || 0}
                                                     </span>
-                                                    <span className="flex items-center gap-1.5 text-xs font-medium bg-secondary/50 px-3 py-1.5 rounded-full" title="Est. Read Time">
+                                                    <span className="flex items-center gap-1.5 text-xs font-medium bg-secondary px-3 py-1.5 rounded-full" title="Est. Read Time">
                                                         <Clock size={14} /> {readTime} min
                                                     </span>
                                                 </div>
@@ -457,7 +472,7 @@ export default function Repository() {
                                                     {/* Quick Copy Link Button */}
                                                     <button 
                                                         onClick={(e) => handleCopyLink(e, post.id)}
-                                                        className="p-2 rounded-full bg-secondary/50 text-muted-foreground hover:bg-primary/10 hover:text-primary transition-colors"
+                                                        className="p-2 rounded-full bg-secondary text-muted-foreground hover:bg-primary/10 hover:text-primary transition-colors"
                                                         title={t('post.copyLink')}
                                                     >
                                                         <LinkIcon size={14} />
@@ -465,6 +480,13 @@ export default function Repository() {
 
                                                     {isAdmin && (
                                                         <div className="flex items-center gap-1 border-x border-border px-2 mx-1">
+                                                            <Link 
+                                                                to={`/editor/${post.id}`}
+                                                                className="p-2 rounded-full hover:bg-secondary transition-colors text-muted-foreground hover:text-primary"
+                                                                title="Edit Post"
+                                                            >
+                                                                <Edit3 size={14} />
+                                                            </Link>
                                                             <button 
                                                                 onClick={(e) => togglePin(e, post)}
                                                                 className={cn("p-2 rounded-full hover:bg-secondary transition-colors", post.is_pinned ? "text-primary bg-primary/10" : "text-muted-foreground")}
@@ -504,8 +526,8 @@ export default function Repository() {
                 </AnimatePresence>
 
                 {filteredPosts.length === 0 && (
-                    <div className="col-span-full text-center py-24 text-muted-foreground bg-secondary/20 rounded-[2.5rem] border border-dashed border-border">
-                        <div className="w-16 h-16 bg-secondary rounded-full flex items-center justify-center mx-auto mb-4 text-muted-foreground">
+                    <div className="col-span-full text-center py-24 text-muted-foreground bg-secondary rounded-[2.5rem] border border-border">
+                        <div className="w-16 h-16 bg-card rounded-full flex items-center justify-center mx-auto mb-4 text-muted-foreground border border-border">
                             <Filter size={24} />
                         </div>
                         <p className="font-medium">{t('repo.noEntries')}</p>
@@ -523,7 +545,7 @@ export default function Repository() {
         <div className="lg:col-span-4 space-y-6">
             
             {/* Profile Card */}
-            <div className="bg-card border border-border rounded-[2.5rem] p-8 relative overflow-hidden group hover:border-primary/30 transition-colors shadow-sm">
+            <div className="bg-card border border-border rounded-[2.5rem] p-8 relative overflow-hidden group hover:border-primary/50 transition-colors shadow-sm">
                 <div className="absolute top-0 right-0 p-6 opacity-5 group-hover:opacity-10 transition-opacity pointer-events-none">
                     <User size={120} />
                 </div>
@@ -544,21 +566,46 @@ export default function Repository() {
                     </p>
 
                     <div className="flex flex-wrap gap-2 mb-8">
-                        <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-secondary/80 text-[10px] font-bold text-foreground"><Cpu size={12} /> AutoCAD</span>
-                        <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-secondary/80 text-[10px] font-bold text-foreground"><Database size={12} /> Data Analysis</span>
-                        <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-secondary/80 text-[10px] font-bold text-foreground"><Smartphone size={12} /> Android Dev</span>
+                        <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-secondary text-[10px] font-bold text-foreground"><Cpu size={12} /> AutoCAD</span>
+                        <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-secondary text-[10px] font-bold text-foreground"><Database size={12} /> Data Analysis</span>
+                        <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-secondary text-[10px] font-bold text-foreground"><Smartphone size={12} /> Android Dev</span>
                     </div>
 
-                    <div className="flex gap-3 pt-6 border-t border-border/50">
-                        <a href="https://xdaforums.com/m/khaliq-morpheus.13212421/" target="_blank" rel="noreferrer" className="flex-1 inline-flex justify-center items-center gap-2 text-xs font-bold text-foreground bg-secondary/50 py-3 rounded-full hover:bg-primary hover:text-primary-foreground transition-colors border border-transparent hover:border-primary/20">
+                    <div className="flex gap-3 pt-6 border-t border-border">
+                        <a href="https://xdaforums.com/m/khaliq-morpheus.13212421/" target="_blank" rel="noreferrer" className="flex-1 inline-flex justify-center items-center gap-2 text-xs font-bold text-foreground bg-secondary py-3 rounded-full hover:bg-primary hover:text-primary-foreground transition-colors border border-transparent">
                             XDA Profile <ExternalLink size={12} />
                         </a>
-                        <a href="https://github.com/Bias8145" target="_blank" rel="noreferrer" className="flex-1 inline-flex justify-center items-center gap-2 text-xs font-bold text-foreground bg-secondary/50 py-3 rounded-full hover:bg-primary hover:text-primary-foreground transition-colors border border-transparent hover:border-primary/20">
+                        <a href="https://github.com/Bias8145" target="_blank" rel="noreferrer" className="flex-1 inline-flex justify-center items-center gap-2 text-xs font-bold text-foreground bg-secondary py-3 rounded-full hover:bg-primary hover:text-primary-foreground transition-colors border border-transparent">
                             GitHub <Github size={12} />
                         </a>
                     </div>
                 </div>
             </div>
+
+            {/* Topics/Tags Cloud (New Visitor Feature) */}
+            {uniqueTopics.length > 0 && (
+                <div className="bg-card border border-border rounded-[2.5rem] p-8 shadow-sm">
+                    <h3 className="text-sm font-bold text-foreground uppercase tracking-wider mb-6 flex items-center gap-2">
+                        <Hash size={18} className="text-primary" /> Popular Topics
+                    </h3>
+                    <div className="flex flex-wrap gap-2">
+                        {uniqueTopics.map(topic => (
+                            <button
+                                key={topic}
+                                onClick={() => setActiveTab(topic)}
+                                className={cn(
+                                    "px-4 py-2 rounded-full text-xs font-bold transition-all border",
+                                    activeTab === topic 
+                                        ? "bg-primary text-primary-foreground border-primary" 
+                                        : "bg-secondary text-muted-foreground border-border hover:border-primary/50 hover:text-foreground"
+                                )}
+                            >
+                                {topic}
+                            </button>
+                        ))}
+                    </div>
+                </div>
+            )}
 
             {/* Public Stats Overview */}
             <div className="bg-card border border-border rounded-[2.5rem] p-8 shadow-sm">
@@ -566,19 +613,19 @@ export default function Repository() {
                     <TrendingUp size={18} className="text-primary" /> Repository Stats
                 </h3>
                 <div className="grid grid-cols-2 gap-4">
-                    <div className="bg-secondary/30 p-5 rounded-[1.5rem] border border-border/50">
+                    <div className="bg-secondary p-5 rounded-[1.5rem] border border-border">
                         <p className="text-3xl font-serif font-bold text-foreground">{stats.public}</p>
                         <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mt-2">Public Entries</p>
                     </div>
-                    <div className="bg-secondary/30 p-5 rounded-[1.5rem] border border-border/50">
+                    <div className="bg-secondary p-5 rounded-[1.5rem] border border-border">
                         <p className="text-3xl font-serif font-bold text-foreground">{stats.research}</p>
                         <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mt-2">Research Papers</p>
                     </div>
-                    <div className="bg-secondary/30 p-5 rounded-[1.5rem] border border-border/50">
+                    <div className="bg-secondary p-5 rounded-[1.5rem] border border-border">
                         <p className="text-3xl font-serif font-bold text-foreground">{totalViews}</p>
                         <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mt-2">Total Reads</p>
                     </div>
-                    <div className="bg-secondary/30 p-5 rounded-[1.5rem] border border-border/50">
+                    <div className="bg-secondary p-5 rounded-[1.5rem] border border-border">
                         <p className="text-3xl font-serif font-bold text-foreground">{totalLikes}</p>
                         <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mt-2">Appreciations</p>
                     </div>
@@ -587,16 +634,16 @@ export default function Repository() {
 
             {/* Admin Extra Stats */}
             {isAdmin && (
-                <div className="bg-primary/5 border border-primary/20 rounded-[2.5rem] p-8 shadow-sm">
+                <div className="bg-primary/10 border border-primary/20 rounded-[2.5rem] p-8 shadow-sm">
                     <h3 className="text-sm font-bold text-primary uppercase tracking-wider mb-6 flex items-center gap-2">
                         <Layers size={18} /> Admin Overview
                     </h3>
                     <div className="space-y-4">
-                        <div className="flex items-center justify-between bg-background p-4 rounded-2xl border border-border/50 shadow-sm">
+                        <div className="flex items-center justify-between bg-card/80 backdrop-blur-sm p-4 rounded-2xl border border-border/50 shadow-sm">
                             <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Drafts</span>
                             <span className="text-lg font-bold text-orange-500">{stats.drafts}</span>
                         </div>
-                        <div className="flex items-center justify-between bg-background p-4 rounded-2xl border border-border/50 shadow-sm">
+                        <div className="flex items-center justify-between bg-card/80 backdrop-blur-sm p-4 rounded-2xl border border-border/50 shadow-sm">
                             <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Visitors Today</span>
                             <span className="text-lg font-bold text-blue-500">{siteVisits}</span>
                         </div>

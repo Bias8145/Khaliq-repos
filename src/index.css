@@ -10,71 +10,70 @@
     /* Dynamic Font Base */
     --base-font-size: 16px;
 
-    /* Light Mode - Softer Cream & Muted Gold */
-    --background: 40 25% 96%; /* Softer, warmer off-white (Cream) */
-    --foreground: 40 15% 25%; /* Softer charcoal, less harsh than pure black */
+    /* Light Mode - Warm White & Faded Gold */
+    --background: 40 20% 98%; /* Very subtle warm off-white */
+    --foreground: 0 0% 15%; /* Softer dark text */
     
-    --card: 40 20% 98%; /* Slightly lighter than background */
-    --card-foreground: 40 15% 25%;
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 15%;
     
-    --popover: 40 20% 98%;
-    --popover-foreground: 40 15% 25%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 15%;
     
-    /* Primary: Soft Warm Gold / Bronze */
-    --primary: 35 45% 50%; 
+    /* Primary: Soft Faded Gold / Brownish Yellow */
+    --primary: 42 40% 50%; /* #B39559 - Muted Brass/Gold */
     --primary-foreground: 0 0% 100%;
     
-    /* Secondary: Very soft tonal background */
-    --secondary: 40 15% 90%;
-    --secondary-foreground: 40 15% 30%;
+    --secondary: 40 10% 94%; /* Warm light gray */
+    --secondary-foreground: 0 0% 25%;
     
-    --muted: 40 15% 90%;
-    --muted-foreground: 40 10% 50%;
+    --muted: 40 10% 94%;
+    --muted-foreground: 0 0% 45%;
     
-    --accent: 35 45% 90%;
-    --accent-foreground: 35 45% 30%;
+    --accent: 42 40% 90%;
+    --accent-foreground: 42 40% 30%;
     
-    --destructive: 0 70% 60%;
+    --destructive: 0 60% 55%;
     --destructive-foreground: 0 0% 98%;
 
-    --border: 40 15% 86%;
-    --input: 40 15% 86%;
-    --ring: 35 45% 50%;
+    --border: 40 10% 88%;
+    --input: 40 10% 88%;
+    --ring: 42 40% 50%;
     
     /* Material 3 Expressive Base Radius */
     --radius: 1.5rem;
   }
 
   .dark {
-    /* Dark Mode - Deep Dark with subtle warm tint (True Dark Mode) */
-    --background: 40 6% 6%; /* Very dark, almost black */
-    --foreground: 40 10% 90%; /* Crisp soft white */
+    /* Dark Mode - True Deep Dark & Faded Gold */
+    --background: 0 0% 8%; /* #141414 - True Dark */
+    --foreground: 0 0% 90%; /* Soft white text */
     
-    --card: 40 6% 9%; /* Slightly elevated from background */
-    --card-foreground: 40 10% 90%;
+    --card: 0 0% 11%; /* #1C1C1C - Slightly lighter for cards */
+    --card-foreground: 0 0% 90%;
     
-    --popover: 40 6% 9%;
-    --popover-foreground: 40 10% 90%;
+    --popover: 0 0% 11%;
+    --popover-foreground: 0 0% 90%;
     
-    /* Primary: Soft Bright Gold */
-    --primary: 35 55% 60%; 
-    --primary-foreground: 40 10% 12%;
+    /* Primary: Soft Faded Gold for Dark Mode */
+    --primary: 42 45% 60%; /* #CBAE70 - Soft Sand/Gold */
+    --primary-foreground: 0 0% 10%;
     
-    --secondary: 40 6% 14%; /* Distinct tonal difference */
-    --secondary-foreground: 40 10% 90%;
+    --secondary: 0 0% 15%; /* #262626 */
+    --secondary-foreground: 0 0% 90%;
     
-    --muted: 40 6% 14%;
-    --muted-foreground: 40 6% 60%;
+    --muted: 0 0% 15%;
+    --muted-foreground: 0 0% 60%;
     
-    --accent: 35 55% 25%;
-    --accent-foreground: 35 55% 85%;
+    --accent: 42 45% 20%;
+    --accent-foreground: 42 45% 80%;
     
-    --destructive: 0 60% 50%;
+    --destructive: 0 50% 50%;
     --destructive-foreground: 0 0% 98%;
     
-    --border: 40 6% 18%; /* Visible but subtle borders */
-    --input: 40 6% 18%;
-    --ring: 35 55% 60%;
+    --border: 0 0% 18%; /* #2E2E2E */
+    --input: 0 0% 18%;
+    --ring: 42 45% 60%;
   }
 }
 

@@ -28,13 +28,13 @@ export const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
     <AnimatePresence>
       {isOpen && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-          {/* Backdrop */}
+          {/* Subtle Backdrop Blur */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={onCancel}
-            className="absolute inset-0 bg-background/80 backdrop-blur-sm"
+            className="absolute inset-0 bg-background/80 backdrop-blur-sm" 
           />
 
           {/* Dialog */}
@@ -42,13 +42,12 @@ export const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
             initial={{ opacity: 0, scale: 0.95, y: 10 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 10 }}
-            className="relative w-full max-w-md bg-card border border-border rounded-2xl shadow-2xl overflow-hidden"
+            className="relative w-full max-w-md bg-card/95 backdrop-blur-xl border border-border/50 rounded-[2rem] shadow-md overflow-hidden"
           >
             <div className="p-6">
               <div className="flex items-start gap-4">
                 <div className={cn(
                   "w-10 h-10 rounded-full flex items-center justify-center shrink-0",
-                  // Use theme tokens for better consistency
                   type === 'danger' ? "bg-destructive/10 text-destructive" : "bg-primary/10 text-primary"
                 )}>
                   <AlertTriangle size={20} />
@@ -68,21 +67,20 @@ export const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
               </div>
             </div>
 
-            <div className="bg-secondary/30 p-4 flex justify-end gap-3 border-t border-border">
+            <div className="bg-secondary/50 p-4 flex justify-end gap-3 border-t border-border/50">
               <button
                 onClick={onCancel}
-                className="px-4 py-2 rounded-lg text-sm font-bold text-muted-foreground hover:bg-secondary transition-colors"
+                className="px-5 py-2.5 rounded-full text-sm font-bold text-muted-foreground hover:bg-card border border-transparent hover:border-border/50 transition-all"
               >
                 {cancelText}
               </button>
               <button
                 onClick={onConfirm}
                 className={cn(
-                  "px-4 py-2 rounded-lg text-sm font-bold shadow-lg transition-all hover:scale-105",
-                  // Use theme tokens strictly
+                  "px-5 py-2.5 rounded-full text-sm font-bold transition-all hover:opacity-90",
                   type === 'danger' 
-                    ? "bg-destructive text-destructive-foreground hover:bg-destructive/90 shadow-destructive/20" 
-                    : "bg-primary text-primary-foreground hover:bg-primary/90 shadow-primary/20"
+                    ? "bg-destructive text-destructive-foreground" 
+                    : "bg-primary text-primary-foreground"
                 )}
               >
                 {confirmText}

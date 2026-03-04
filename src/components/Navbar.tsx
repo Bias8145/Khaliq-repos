@@ -36,10 +36,6 @@ export default function Navbar() {
     navigate('/');
   };
 
-  const navItems = [
-    { name: t('nav.repository'), path: '/', icon: BookOpen, desc: t('nav.repoDesc') },
-  ];
-
   return (
     <>
       {/* Invisible backdrop to close settings when clicking outside */}
@@ -49,14 +45,14 @@ export default function Navbar() {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                className="fixed inset-0 z-40 bg-background/20 backdrop-blur-[2px]"
+                className="fixed inset-0 z-40 bg-background/20 backdrop-blur-sm"
                 onClick={() => setShowFontSettings(false)}
             />
         )}
       </AnimatePresence>
 
-      {/* Material 3 Expressive Floating Pill Navbar */}
-      <nav className="fixed top-4 left-4 right-4 md:left-8 md:right-8 max-w-7xl mx-auto z-50 bg-card/80 backdrop-blur-xl border border-border/60 rounded-[2rem] transition-all duration-300 shadow-lg shadow-black/5">
+      {/* Frosted Glass Pill Navbar (Matte Blur, No Glow) */}
+      <nav className="fixed top-4 left-4 right-4 md:left-8 md:right-8 max-w-7xl mx-auto z-50 bg-card/80 backdrop-blur-xl border border-border/50 rounded-[2rem] transition-all duration-300 shadow-sm">
         <div className="px-5 md:px-8 h-16 flex items-center justify-between">
           
           <Link to="/" className="flex items-center gap-3 group z-50 relative">
@@ -83,7 +79,7 @@ export default function Navbar() {
                         }}
                         className={cn(
                             "p-2.5 rounded-full transition-colors relative group z-50",
-                            showFontSettings ? "bg-primary text-primary-foreground" : "bg-secondary/50 hover:bg-secondary text-muted-foreground hover:text-foreground"
+                            showFontSettings ? "bg-primary text-primary-foreground" : "bg-secondary/80 hover:bg-secondary text-muted-foreground hover:text-foreground"
                         )}
                         title={t('nav.settings')}
                     >
@@ -96,10 +92,10 @@ export default function Navbar() {
                                 initial={{ opacity: 0, y: 10, scale: 0.95 }}
                                 animate={{ opacity: 1, y: 0, scale: 1 }}
                                 exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                                className="absolute top-full right-0 mt-4 w-80 bg-card border border-border rounded-[2rem] shadow-2xl p-6 z-50"
+                                className="absolute top-full right-0 mt-4 w-80 bg-card/95 backdrop-blur-xl border border-border/50 rounded-[2rem] shadow-md p-6 z-50"
                                 onClick={(e) => e.stopPropagation()}
                             >
-                                <div className="flex items-center justify-between mb-6 pb-4 border-b border-border">
+                                <div className="flex items-center justify-between mb-6 pb-4 border-b border-border/50">
                                     <span className="text-xs font-bold uppercase text-muted-foreground tracking-wider">{t('nav.settings')}</span>
                                     <button onClick={() => setFontSize(16)} className="text-[10px] font-bold text-primary hover:underline flex items-center gap-1 bg-primary/10 px-2 py-1 rounded-full">
                                         <RefreshCw size={10} /> Reset
@@ -112,16 +108,16 @@ export default function Navbar() {
                                         <span className="text-sm font-bold text-foreground flex items-center gap-2">
                                             <Languages size={16} /> {t('nav.language')}
                                         </span>
-                                        <div className="flex bg-secondary rounded-full p-1">
+                                        <div className="flex bg-secondary/80 rounded-full p-1 border border-border/50">
                                             <button 
                                                 onClick={() => setLanguage('en')}
-                                                className={cn("px-4 py-1.5 rounded-full text-xs font-bold transition-all", language === 'en' ? "bg-background shadow-sm text-primary" : "text-muted-foreground hover:text-foreground")}
+                                                className={cn("px-4 py-1.5 rounded-full text-xs font-bold transition-all", language === 'en' ? "bg-card shadow-sm text-primary" : "text-muted-foreground hover:text-foreground")}
                                             >
                                                 EN
                                             </button>
                                             <button 
                                                 onClick={() => setLanguage('id')}
-                                                className={cn("px-4 py-1.5 rounded-full text-xs font-bold transition-all", language === 'id' ? "bg-background shadow-sm text-primary" : "text-muted-foreground hover:text-foreground")}
+                                                className={cn("px-4 py-1.5 rounded-full text-xs font-bold transition-all", language === 'id' ? "bg-card shadow-sm text-primary" : "text-muted-foreground hover:text-foreground")}
                                             >
                                                 ID
                                             </button>
@@ -135,7 +131,7 @@ export default function Navbar() {
                                             <span className="text-sm font-bold text-foreground">Font Size</span>
                                             <span className="text-xs font-mono font-bold text-primary bg-primary/10 px-2 py-0.5 rounded-full">{fontSize}px</span>
                                         </div>
-                                        <div className="flex items-center gap-4 bg-secondary/50 p-3 rounded-full">
+                                        <div className="flex items-center gap-4 bg-secondary/80 p-3 rounded-full border border-border/50">
                                             <span className="text-xs font-bold text-muted-foreground ml-2">A</span>
                                             <input 
                                                 type="range" 
@@ -144,17 +140,17 @@ export default function Navbar() {
                                                 step="1"
                                                 value={fontSize}
                                                 onChange={(e) => setFontSize(parseInt(e.target.value))}
-                                                className="w-full h-2 bg-secondary rounded-full appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-5 [&::-webkit-slider-thumb]:h-5 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-primary [&::-webkit-slider-thumb]:shadow-md"
+                                                className="w-full h-2 bg-border rounded-full appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-5 [&::-webkit-slider-thumb]:h-5 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-primary"
                                             />
                                             <span className="text-lg font-bold text-foreground mr-2">A</span>
                                         </div>
                                     </div>
 
-                                    <div className="flex items-center justify-between pt-6 border-t border-border">
+                                    <div className="flex items-center justify-between pt-6 border-t border-border/50">
                                         <span className="text-sm font-bold text-foreground">Theme</span>
                                         <button 
                                             onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-                                            className="flex items-center gap-2 px-4 py-2 rounded-full bg-secondary hover:bg-secondary/80 text-xs font-bold transition-colors"
+                                            className="flex items-center gap-2 px-4 py-2 rounded-full bg-secondary/80 hover:bg-secondary border border-border/50 text-xs font-bold transition-colors"
                                         >
                                             {theme === 'dark' ? <Sun size={16} /> : <Moon size={16} />}
                                             {theme === 'dark' ? 'Light Mode' : 'Dark Mode'}
@@ -170,14 +166,14 @@ export default function Navbar() {
                     <div className="flex items-center gap-2 border-l border-border/50 pl-3 ml-1">
                         <Link 
                             to="/editor/new" 
-                            className="flex items-center gap-2 px-4 py-2.5 rounded-full bg-primary text-primary-foreground text-xs font-bold hover:opacity-90 transition-all shadow-lg shadow-primary/20 hover:shadow-primary/30 hover:-translate-y-0.5"
+                            className="flex items-center gap-2 px-4 py-2.5 rounded-full bg-primary text-primary-foreground text-xs font-bold hover:opacity-90 transition-all hover:-translate-y-0.5"
                         >
                             <PenTool size={16} />
                             {t('nav.write')}
                         </Link>
                         <button 
                             onClick={handleLogout} 
-                            className="p-2.5 rounded-full bg-secondary/50 hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors"
+                            className="p-2.5 rounded-full bg-secondary/80 hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors"
                             title={t('nav.signOut')}
                         >
                             <LogOut size={18} />
@@ -214,7 +210,7 @@ export default function Navbar() {
                 }}
                 className={cn(
                     "p-2.5 rounded-full transition-colors",
-                    showFontSettings ? "bg-primary text-primary-foreground" : "bg-secondary text-muted-foreground hover:bg-secondary/80"
+                    showFontSettings ? "bg-primary text-primary-foreground" : "bg-secondary/80 text-muted-foreground hover:bg-secondary"
                 )}
              >
                 <Settings2 size={20} />
@@ -223,21 +219,21 @@ export default function Navbar() {
         </div>
       </nav>
 
-      {/* Mobile Settings Drawer - Adjusted for Floating Navbar */}
+      {/* Mobile Settings Drawer */}
       <AnimatePresence>
         {showFontSettings && (
             <motion.div
                 initial={{ opacity: 0, y: -20 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -20 }}
-                className="fixed top-24 left-4 right-4 z-[60] bg-card border border-border p-6 shadow-2xl md:hidden rounded-[2rem]"
+                className="fixed top-24 left-4 right-4 z-[60] bg-card/95 backdrop-blur-xl border border-border/50 p-6 shadow-md md:hidden rounded-[2rem]"
                 onClick={(e) => e.stopPropagation()}
             >
                 <div className="flex items-center justify-between mb-6">
                     <span className="text-xs font-bold uppercase text-muted-foreground tracking-wider">{t('nav.settings')}</span>
                     <button 
                         onClick={() => setShowFontSettings(false)}
-                        className="p-2 bg-secondary/50 rounded-full text-muted-foreground hover:text-foreground"
+                        className="p-2 bg-secondary/80 rounded-full text-muted-foreground hover:text-foreground"
                     >
                         <X size={16} />
                     </button>
@@ -249,16 +245,16 @@ export default function Navbar() {
                         <span className="text-sm font-bold text-foreground flex items-center gap-2">
                             <Languages size={16} /> {t('nav.language')}
                         </span>
-                        <div className="flex bg-secondary rounded-full p-1">
+                        <div className="flex bg-secondary/80 rounded-full p-1 border border-border/50">
                             <button 
                                 onClick={() => setLanguage('en')}
-                                className={cn("px-4 py-2 rounded-full text-xs font-bold transition-all", language === 'en' ? "bg-background shadow-sm text-primary" : "text-muted-foreground")}
+                                className={cn("px-4 py-2 rounded-full text-xs font-bold transition-all", language === 'en' ? "bg-card shadow-sm text-primary" : "text-muted-foreground")}
                             >
                                 English
                             </button>
                             <button 
                                 onClick={() => setLanguage('id')}
-                                className={cn("px-4 py-2 rounded-full text-xs font-bold transition-all", language === 'id' ? "bg-background shadow-sm text-primary" : "text-muted-foreground")}
+                                className={cn("px-4 py-2 rounded-full text-xs font-bold transition-all", language === 'id' ? "bg-card shadow-sm text-primary" : "text-muted-foreground")}
                             >
                                 Indonesia
                             </button>
@@ -272,7 +268,7 @@ export default function Navbar() {
                              <span className="text-sm font-bold text-foreground">Font Size</span>
                              <span className="text-xs font-mono font-bold text-primary bg-primary/10 px-2 py-0.5 rounded-full">{fontSize}px</span>
                         </div>
-                        <div className="flex items-center gap-4 bg-secondary/50 p-3 rounded-full">
+                        <div className="flex items-center gap-4 bg-secondary/80 p-3 rounded-full border border-border/50">
                             <span className="text-xs text-muted-foreground ml-2">A</span>
                             <input 
                                 type="range" 
@@ -281,17 +277,17 @@ export default function Navbar() {
                                 step="1"
                                 value={fontSize}
                                 onChange={(e) => setFontSize(parseInt(e.target.value))}
-                                className="w-full h-2 bg-secondary rounded-full appearance-none [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-5 [&::-webkit-slider-thumb]:h-5 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-primary [&::-webkit-slider-thumb]:shadow-md"
+                                className="w-full h-2 bg-border rounded-full appearance-none [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-5 [&::-webkit-slider-thumb]:h-5 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-primary"
                             />
                             <span className="text-lg text-foreground mr-2">A</span>
                         </div>
                     </div>
 
-                    <div className="flex items-center justify-between pt-6 border-t border-border">
+                    <div className="flex items-center justify-between pt-6 border-t border-border/50">
                         <span className="text-sm font-bold text-foreground">Dark Mode</span>
                         <button 
                             onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-                            className="p-3 bg-secondary rounded-full text-foreground"
+                            className="p-3 bg-secondary/80 rounded-full text-foreground border border-border/50"
                         >
                             {theme === 'dark' ? <Sun size={20} /> : <Moon size={20} />}
                         </button>
