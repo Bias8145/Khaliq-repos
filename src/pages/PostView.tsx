@@ -2,7 +2,7 @@ import React, { useEffect, useState, useRef, useMemo } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { supabase, type Post } from '../lib/supabase';
 import { format } from 'date-fns';
-import { ArrowLeft, Edit3, Clock, Share2, Heart, Link as LinkIcon, Twitter, Linkedin, MessageCircle, Download, ImageIcon, X, Loader2, Feather, Send, Moon, Sun, RefreshCw, Maximize, Smartphone, Square, Layout, MousePointerClick, TextCursorInput, Globe, Microscope, Book, MessageSquareQuote, FileText, Pin, Maximize2, Minimize2, ShieldCheck, Lock, Eye, Share, Facebook, Mail, Layers, Plus, Trash2 } from 'lucide-react';
+import { ArrowLeft, Edit3, Clock, Share2, Heart, Link as LinkIcon, Twitter, Linkedin, MessageCircle, Download, ImageIcon, X, Loader2, Feather, Send, Moon, Sun, RefreshCw, Maximize, Smartphone, Square, Layout, MousePointerClick, TextCursorInput, Globe, Microscope, Book, MessageSquareQuote, FileText, Pin, Maximize2, Minimize2, ShieldCheck, Lock, Eye, Share, Facebook, Mail, Layers, Plus, Trash2, Quote } from 'lucide-react';
 import { calculateReadingTime } from '../lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MarkdownRenderer } from '../components/MarkdownRenderer';
@@ -859,12 +859,12 @@ export default function PostView() {
 
                         {/* PREVIEW AREA */}
                         {shareMode === 'single' ? (
-                            // SINGLE CARD PREVIEW
-                            <div className="w-full max-w-2xl flex justify-center mb-8">
+                            // SINGLE CARD PREVIEW (Wider & Cleaner)
+                            <div className="w-full max-w-3xl flex justify-center mb-8">
                                 <div ref={singleCardRef} style={{ backgroundColor: 'transparent' }}>
                                     <div 
                                         className={cn(
-                                            "relative w-[340px] md:w-[500px] flex flex-col justify-between overflow-hidden transition-colors duration-300",
+                                            "relative w-[380px] md:w-[600px] flex flex-col justify-between overflow-hidden transition-colors duration-300",
                                             aspectRatio === 'square' ? "aspect-square" : 
                                             aspectRatio === 'portrait' ? "aspect-[4/5]" : 
                                             aspectRatio === 'story' ? "aspect-[9/16]" : 
@@ -901,24 +901,25 @@ export default function PostView() {
                                             </div>
                                         </div>
 
-                                        {/* Main Content */}
+                                        {/* Main Content (Clean Sans-Serif Quote) */}
                                         <div className="relative z-10 flex-grow flex flex-col justify-center mb-10 w-full">
                                             <h2 className={cn(
-                                                "text-4xl md:text-5xl font-bold tracking-tight mb-8 leading-[1.2]", 
+                                                "text-3xl md:text-4xl font-bold tracking-tight mb-8 leading-[1.2]", 
                                                 cardTheme === 'dark' ? "text-[#E5E5E5]" : "text-[#1A1A1A]"
                                             )} style={{ fontFamily: 'sans-serif', wordWrap: 'break-word' }}>
                                                 {post.title}
                                             </h2>
                                             
-                                            <div className={cn(
-                                                "pl-6 border-l-4",
-                                                cardTheme === 'dark' ? "border-[#CBAE70]/50" : "border-[#B39559]/50"
-                                            )}>
+                                            <div className="relative mt-2">
+                                                <Quote size={32} className={cn(
+                                                    "mb-4 opacity-40",
+                                                    cardTheme === 'dark' ? "text-[#CBAE70]" : "text-[#B39559]"
+                                                )} />
                                                 <p className={cn(
-                                                    "text-xl md:text-2xl leading-relaxed italic whitespace-pre-wrap", 
-                                                    cardTheme === 'dark' ? "text-[#A3A3A3]" : "text-[#666666]"
-                                                )} style={{ fontFamily: 'serif' }}>
-                                                    "{customExcerpt}"
+                                                    "text-xl md:text-2xl leading-[1.6] whitespace-pre-wrap font-medium", 
+                                                    cardTheme === 'dark' ? "text-[#D4D4D4]" : "text-[#333333]"
+                                                )} style={{ fontFamily: 'sans-serif' }}>
+                                                    {customExcerpt}
                                                 </p>
                                             </div>
                                         </div>

@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowRight, BookOpen, Layers, Terminal, User, GraduationCap, Github, Cpu, Database, Globe, Smartphone, ExternalLink, Feather, Share2, X, Layout, Sun, Moon, Maximize, Square, RefreshCw, Send, Loader2, Download, TrendingUp, Flame, PenTool } from 'lucide-react';
+import { ArrowRight, BookOpen, Layers, Terminal, User, GraduationCap, Github, Cpu, Database, Globe, Smartphone, ExternalLink, Feather, Share2, X, Layout, Sun, Moon, Maximize, Square, RefreshCw, Send, Loader2, Download, TrendingUp, Flame, PenTool, Quote } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useLanguage } from '../lib/language';
 import { cn } from '../lib/utils';
@@ -326,59 +326,59 @@ export default function Home() {
                 exit={{ opacity: 0 }}
                 className="fixed inset-0 z-[100] bg-background/95 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto"
             >
-                <div className="relative w-full max-w-2xl flex flex-col items-center my-auto">
+                <div className="relative w-full max-w-4xl flex flex-col items-center my-auto">
                     <div className="text-center mb-6">
                         <h2 className="text-2xl font-bold text-foreground">{t('home.promote.title')}</h2>
                         <p className="text-muted-foreground text-sm">{t('home.promote.desc')}</p>
                     </div>
 
                     {/* Controls */}
-                    <div className="w-full bg-card/90 backdrop-blur-xl border border-border/50 rounded-[2rem] p-5 mb-6 shadow-md space-y-5">
+                    <div className="w-full max-w-3xl bg-card/90 backdrop-blur-xl border border-border/50 rounded-[2.5rem] p-6 mb-6 shadow-md space-y-6">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             {/* Size Selector */}
-                            <div className="space-y-2">
+                            <div className="space-y-3">
                                 <span className="text-xs font-bold uppercase text-muted-foreground flex items-center gap-2">
                                     <Maximize size={14} /> {t('post.cardSize')}
                                 </span>
-                                <div className="grid grid-cols-4 gap-1 bg-secondary/80 rounded-full p-1 border border-border/50">
-                                    <button onClick={() => setAspectRatio('auto')} className={cn("py-2 rounded-full transition-all flex justify-center", aspectRatio === 'auto' ? "bg-card shadow-sm text-primary border border-border/50" : "text-muted-foreground hover:text-foreground")} title={t('post.sizes.auto')}>
-                                        <Layout size={16} />
+                                <div className="grid grid-cols-4 gap-2 bg-secondary/80 rounded-full p-1 border border-border/50">
+                                    <button onClick={() => setAspectRatio('auto')} className={cn("py-2.5 rounded-full transition-all flex justify-center", aspectRatio === 'auto' ? "bg-card shadow-sm text-primary border border-border/50" : "text-muted-foreground hover:text-foreground")} title={t('post.sizes.auto')}>
+                                        <Layout size={18} />
                                     </button>
-                                    <button onClick={() => setAspectRatio('portrait')} className={cn("py-2 rounded-full transition-all flex justify-center", aspectRatio === 'portrait' ? "bg-card shadow-sm text-primary border border-border/50" : "text-muted-foreground hover:text-foreground")} title={t('post.sizes.portrait')}>
-                                        <Smartphone size={16} />
+                                    <button onClick={() => setAspectRatio('portrait')} className={cn("py-2.5 rounded-full transition-all flex justify-center", aspectRatio === 'portrait' ? "bg-card shadow-sm text-primary border border-border/50" : "text-muted-foreground hover:text-foreground")} title={t('post.sizes.portrait')}>
+                                        <Smartphone size={18} />
                                     </button>
-                                    <button onClick={() => setAspectRatio('square')} className={cn("py-2 rounded-full transition-all flex justify-center", aspectRatio === 'square' ? "bg-card shadow-sm text-primary border border-border/50" : "text-muted-foreground hover:text-foreground")} title={t('post.sizes.square')}>
-                                        <Square size={16} />
+                                    <button onClick={() => setAspectRatio('square')} className={cn("py-2.5 rounded-full transition-all flex justify-center", aspectRatio === 'square' ? "bg-card shadow-sm text-primary border border-border/50" : "text-muted-foreground hover:text-foreground")} title={t('post.sizes.square')}>
+                                        <Square size={18} />
                                     </button>
-                                    <button onClick={() => setAspectRatio('story')} className={cn("py-2 rounded-full transition-all flex justify-center", aspectRatio === 'story' ? "bg-card shadow-sm text-primary border border-border/50" : "text-muted-foreground hover:text-foreground")} title={t('post.sizes.story')}>
-                                        <Smartphone size={16} className="scale-y-110" />
+                                    <button onClick={() => setAspectRatio('story')} className={cn("py-2.5 rounded-full transition-all flex justify-center", aspectRatio === 'story' ? "bg-card shadow-sm text-primary border border-border/50" : "text-muted-foreground hover:text-foreground")} title={t('post.sizes.story')}>
+                                        <Smartphone size={18} className="scale-y-110" />
                                     </button>
                                 </div>
                             </div>
 
                             {/* Theme & Text */}
-                            <div className="space-y-4">
-                                <div className="space-y-2">
+                            <div className="space-y-6">
+                                <div className="space-y-3">
                                     <span className="text-xs font-bold uppercase text-muted-foreground flex items-center gap-2">
                                         <Sun size={14} /> {t('post.cardTheme')}
                                     </span>
-                                    <div className="flex bg-secondary/80 rounded-full p-1 border border-border/50">
+                                    <div className="flex bg-secondary/80 rounded-full p-1 gap-1 border border-border/50">
                                         <button 
                                             onClick={() => setCardTheme('dark')}
-                                            className={cn("flex-1 py-1.5 rounded-full text-xs font-bold transition-all flex items-center justify-center gap-2", cardTheme === 'dark' ? "bg-card shadow-sm text-primary border border-border/50" : "text-muted-foreground hover:text-foreground")}
+                                            className={cn("flex-1 py-2 rounded-full text-sm font-bold transition-all flex items-center justify-center gap-2", cardTheme === 'dark' ? "bg-card shadow-sm text-primary border border-border/50" : "text-muted-foreground hover:text-foreground")}
                                         >
-                                            <Moon size={12} /> Dark
+                                            <Moon size={14} /> Dark
                                         </button>
                                         <button 
                                             onClick={() => setCardTheme('light')}
-                                            className={cn("flex-1 py-1.5 rounded-full text-xs font-bold transition-all flex items-center justify-center gap-2", cardTheme === 'light' ? "bg-card shadow-sm text-primary border border-border/50" : "text-muted-foreground hover:text-foreground")}
+                                            className={cn("flex-1 py-2 rounded-full text-sm font-bold transition-all flex items-center justify-center gap-2", cardTheme === 'light' ? "bg-card shadow-sm text-primary border border-border/50" : "text-muted-foreground hover:text-foreground")}
                                         >
-                                            <Sun size={12} /> Light
+                                            <Sun size={14} /> Light
                                         </button>
                                     </div>
                                 </div>
 
-                                <div className="space-y-2">
+                                <div className="space-y-3">
                                     <div className="flex justify-between items-center">
                                         <span className="text-xs font-bold uppercase text-muted-foreground">{t('home.promote.customize')}</span>
                                         <button 
@@ -391,7 +391,7 @@ export default function Home() {
                                     <textarea 
                                         value={promoText}
                                         onChange={(e) => setPromoText(e.target.value)}
-                                        className="w-full bg-secondary/80 border border-border/50 rounded-[1.5rem] p-3 text-sm focus:border-primary outline-none transition-all resize-none h-16"
+                                        className="w-full bg-secondary/80 border border-border/50 rounded-[1.5rem] p-4 text-sm focus:border-primary outline-none transition-all resize-none min-h-[100px]"
                                         placeholder="Enter your promotional message..."
                                     />
                                 </div>
@@ -399,13 +399,13 @@ export default function Home() {
                         </div>
                     </div>
 
-                    {/* REBUILT SHARE CARD - Solid Gold Theme */}
-                    <div className="w-full flex justify-center mb-6">
+                    {/* REBUILT SHARE CARD - Wider & Cleaner */}
+                    <div className="w-full max-w-3xl flex justify-center mb-8">
                         {/* Wrapper for html2canvas to fix rounded corner bleed */}
                         <div ref={cardRef} style={{ backgroundColor: 'transparent' }}>
                             <div 
                                 className={cn(
-                                    "relative w-full flex flex-col justify-between overflow-hidden p-10 transition-colors duration-300",
+                                    "relative w-[380px] md:w-[600px] flex flex-col justify-between overflow-hidden transition-colors duration-300",
                                     aspectRatio === 'square' ? "aspect-square" : 
                                     aspectRatio === 'portrait' ? "aspect-[4/5]" : 
                                     aspectRatio === 'story' ? "aspect-[9/16]" : 
@@ -415,6 +415,8 @@ export default function Home() {
                                 style={{ 
                                     borderRadius: '32px',
                                     border: cardTheme === 'dark' ? '1px solid #2E2E2E' : '1px solid #E0E0E0',
+                                    padding: '3rem',
+                                    boxSizing: 'border-box'
                                 }}
                             >
                                 {/* Background Elements */}
@@ -426,70 +428,70 @@ export default function Home() {
                                 </div>
                                 
                                 {/* Header: Logo & Brand */}
-                                <div className="relative z-10 flex items-center gap-4 mb-12">
+                                <div className="relative z-10 flex items-center gap-4 mb-10">
                                     <div className={cn(
-                                        "w-10 h-10 rounded-full border flex items-center justify-center",
+                                        "w-12 h-12 rounded-full border flex items-center justify-center",
                                         cardTheme === 'dark' ? "border-[#CBAE70]/30 bg-[#CBAE70]/10 text-[#CBAE70]" : "border-[#B39559]/30 bg-[#B39559]/10 text-[#B39559]"
                                     )}>
-                                        <Feather size={18} />
+                                        <Feather size={20} />
                                     </div>
                                     <div className="flex flex-col">
-                                        <span className={cn("text-xs font-bold tracking-widest uppercase", cardTheme === 'dark' ? "text-[#E5E5E5]" : "text-[#1A1A1A]")}>
+                                        <span className={cn("text-sm font-bold tracking-widest uppercase", cardTheme === 'dark' ? "text-[#E5E5E5]" : "text-[#1A1A1A]")} style={{ fontFamily: 'sans-serif' }}>
                                             Khaliq Repository
                                         </span>
-                                        <span className={cn("text-[10px] tracking-wider uppercase opacity-60", cardTheme === 'dark' ? "text-[#E5E5E5]" : "text-[#1A1A1A]")}>
+                                        <span className={cn("text-[10px] tracking-wider uppercase opacity-60", cardTheme === 'dark' ? "text-[#E5E5E5]" : "text-[#1A1A1A]")} style={{ fontFamily: 'sans-serif' }}>
                                             Digital Garden & Archive
                                         </span>
                                     </div>
                                 </div>
 
-                                {/* Main Content */}
-                                <div className="relative z-10 flex-grow flex flex-col justify-center mb-8">
+                                {/* Main Content (Clean Sans-Serif Quote) */}
+                                <div className="relative z-10 flex-grow flex flex-col justify-center mb-10 w-full">
                                     <h2 className={cn(
-                                        "text-4xl md:text-5xl font-bold tracking-tight mb-8 font-sans leading-[1.1]", 
+                                        "text-3xl md:text-4xl font-bold tracking-tight mb-8 leading-[1.2]", 
                                         cardTheme === 'dark' ? "text-[#E5E5E5]" : "text-[#1A1A1A]"
-                                    )}>
+                                    )} style={{ fontFamily: 'sans-serif', wordWrap: 'break-word' }}>
                                         Bias Fajar Khaliq
                                     </h2>
                                     
-                                    {/* Quote / Excerpt with Bar */}
-                                    <div className={cn(
-                                        "pl-6 border-l-4",
-                                        cardTheme === 'dark' ? "border-[#CBAE70]/50" : "border-[#B39559]/50"
-                                    )}>
+                                    <div className="relative mt-2">
+                                        <Quote size={32} className={cn(
+                                            "mb-4 opacity-40",
+                                            cardTheme === 'dark' ? "text-[#CBAE70]" : "text-[#B39559]"
+                                        )} />
                                         <p className={cn(
-                                            "text-lg md:text-xl leading-relaxed italic whitespace-pre-wrap", 
-                                            cardTheme === 'dark' ? "text-[#A3A3A3]" : "text-[#666666]"
-                                        )}>
-                                            "{promoText}"
+                                            "text-xl md:text-2xl leading-[1.6] whitespace-pre-wrap font-medium", 
+                                            cardTheme === 'dark' ? "text-[#D4D4D4]" : "text-[#333333]"
+                                        )} style={{ fontFamily: 'sans-serif' }}>
+                                            {promoText}
                                         </p>
                                     </div>
                                 </div>
 
                                 {/* Footer */}
                                 <div className={cn(
-                                    "relative z-10 pt-8 border-t flex items-end justify-between w-full", 
+                                    "relative z-10 pt-6 border-t flex items-end justify-between w-full", 
                                     cardTheme === 'dark' ? "border-[#2E2E2E]" : "border-[#E0E0E0]"
                                 )}>
                                     {/* Left: Website URL */}
-                                    <div className="flex items-center gap-2">
+                                    <div className="flex items-center gap-3">
                                          <div className={cn(
-                                            "w-8 h-8 rounded-full flex items-center justify-center",
+                                            "w-10 h-10 rounded-full flex items-center justify-center",
                                             cardTheme === 'dark' ? "bg-[#E5E5E5] text-[#141414]" : "bg-[#1A1A1A] text-[#FAFAFA]"
                                          )}>
-                                            <Globe size={14} />
+                                            <Globe size={16} />
                                          </div>
-                                         <span className={cn("text-xs font-bold tracking-wide", cardTheme === 'dark' ? "text-[#E5E5E5]" : "text-[#1A1A1A]")}>
+                                         <span className={cn("text-sm font-bold tracking-wide", cardTheme === 'dark' ? "text-[#E5E5E5]" : "text-[#1A1A1A]")} style={{ fontFamily: 'sans-serif' }}>
                                             khaliq-repos.pages.dev
                                          </span>
                                     </div>
 
                                     {/* Right: Date & Meta */}
                                     <div className="text-right">
-                                        <p className={cn("text-[10px] uppercase tracking-wider opacity-60 mb-1", cardTheme === 'dark' ? "text-[#E5E5E5]" : "text-[#1A1A1A]")}>
+                                        <p className={cn("text-xs uppercase tracking-wider opacity-60 mb-1", cardTheme === 'dark' ? "text-[#E5E5E5]" : "text-[#1A1A1A]")} style={{ fontFamily: 'sans-serif' }}>
                                             {new Date().getFullYear()}
                                         </p>
-                                        <p className={cn("text-xs font-bold", cardTheme === 'dark' ? "text-[#E5E5E5]" : "text-[#1A1A1A]")}>
+                                        <p className={cn("text-sm font-bold", cardTheme === 'dark' ? "text-[#CBAE70]" : "text-[#B39559]")} style={{ fontFamily: 'sans-serif' }}>
                                             Portfolio & Research
                                         </p>
                                     </div>
