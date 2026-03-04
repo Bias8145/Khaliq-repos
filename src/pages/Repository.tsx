@@ -2,7 +2,7 @@ import React, { useEffect, useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { supabase, type Post } from '../lib/supabase';
 import { format } from 'date-fns';
-import { Eye, EyeOff, Plus, Search, ChevronRight, Filter, Layers, Trash2, Heart, Users, MousePointerClick, TrendingUp, Archive, Pin, PinOff, User, ExternalLink, Github, Cpu, Database, Smartphone, LayoutGrid, List, ChevronDown, ChevronUp, Clock, X, Link as LinkIcon, Edit3, Hash } from 'lucide-react';
+import { Eye, EyeOff, Plus, Search, ChevronRight, Filter, Layers, Trash2, Heart, Users, MousePointerClick, TrendingUp, Archive, Pin, PinOff, User, ExternalLink, Github, Cpu, Database, Smartphone, LayoutGrid, List, ChevronDown, ChevronUp, Clock, X, Link as LinkIcon, Edit3, Hash, Quote } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn, calculateReadingTime } from '../lib/utils';
 import { useToast } from '../components/ui/Toast';
@@ -102,10 +102,8 @@ export default function Repository() {
     return Array.from(topics).slice(0, 8); // Top 8 topics
   }, [posts]);
 
-  // Toggle Accordion Panel
-  const toggleExpand = (e: React.MouseEvent, id: string) => {
-      e.preventDefault();
-      e.stopPropagation();
+  // Toggle Accordion Panel (Now without event parameter since whole card is clickable)
+  const toggleExpand = (id: string) => {
       const newSet = new Set(expandedPosts);
       if (newSet.has(id)) {
           newSet.delete(id);
@@ -117,7 +115,6 @@ export default function Repository() {
 
   // Quick Copy Link
   const handleCopyLink = (e: React.MouseEvent, id: string) => {
-      e.preventDefault();
       e.stopPropagation();
       const url = `${window.location.origin}/post/${id}`;
       navigator.clipboard.writeText(url);
@@ -126,7 +123,6 @@ export default function Repository() {
 
   // Admin Actions
   const confirmDelete = (e: React.MouseEvent, id: string) => {
-    e.preventDefault();
     e.stopPropagation();
     setDeleteId(id);
   };
@@ -147,7 +143,6 @@ export default function Repository() {
   };
 
   const toggleVisibility = async (e: React.MouseEvent, post: Post) => {
-    e.preventDefault();
     e.stopPropagation();
     const newIsPublic = !post.is_public;
 
@@ -171,7 +166,6 @@ export default function Repository() {
   };
 
   const togglePin = async (e: React.MouseEvent, post: Post) => {
-    e.preventDefault();
     e.stopPropagation();
     const newIsPinned = !post.is_pinned;
 
@@ -363,10 +357,11 @@ export default function Repository() {
                             animate={{ opacity: 1, y: 0 }}
                             exit={{ opacity: 0, scale: 0.95 }}
                             transition={{ delay: index * 0.05, duration: 0.2 }}
+                            onClick={() => { if (viewMode === 'list') toggleExpand(post.id); }}
                             className={cn(
-                                "bg-card border rounded-[2rem] transition-all duration-300 relative overflow-hidden flex flex-col shadow-sm",
+                                "bg-card border rounded-[2rem] transition-all duration-300 relative overflow-hidden flex flex-col shadow-sm group",
                                 post.status === 'draft' ? "border-orange-500/30 bg-orange-500/5" : "border-border hover:border-primary/50",
-                                viewMode === 'list' ? "p-5 md:p-6" : "p-6 md:p-8 h-full"
+                                viewMode === 'list' ? "p-5 md:p-6 cursor-pointer" : "p-6 md:p-8 h-full"
                             )}
                         >
                             {post.status === 'draft' && (
@@ -375,18 +370,16 @@ export default function Repository() {
                                 </div>
                             )}
 
-                            {/* Redesigned Pinned Badge (Absolute Top Right) */}
-                            {post.is_pinned && (
-                                <div className="absolute top-4 right-4 z-10 flex items-center gap-1.5 px-3 py-1.5 bg-primary/10 backdrop-blur-md border border-primary/20 rounded-full text-[10px] font-bold text-primary uppercase tracking-wider">
-                                    <Pin size={12} className="fill-current" /> Pinned
-                                </div>
-                            )}
-
-                            {/* Compact Header (Always Visible) */}
+                            {/* Header: Tags & Date (Inline Pin Badge) */}
                             <div className={cn("flex flex-col md:flex-row md:items-center justify-between gap-4 relative z-10", viewMode === 'grid' && "mb-5")}>
-                                <div className="flex flex-wrap items-center gap-2 pr-20"> {/* pr-20 to avoid overlap with pin badge */}
+                                <div className="flex flex-wrap items-center gap-2">
+                                    {post.is_pinned && (
+                                        <span className="flex items-center gap-1.5 px-3 py-1 bg-primary/10 border border-primary/20 rounded-full text-[10px] font-bold text-primary uppercase tracking-wider">
+                                            <Pin size={12} className="fill-current" /> Pinned
+                                        </span>
+                                    )}
                                     <span className={cn(
-                                        "px-3 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-wider border",
+                                        "px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border",
                                         post.category === 'Catatan' ? "bg-blue-500/10 text-blue-600 border-blue-500/20" :
                                         post.category === 'Penelitian' ? "bg-purple-500/10 text-purple-600 border-purple-500/20" :
                                         "bg-primary/10 text-primary border-primary/20"
@@ -395,7 +388,7 @@ export default function Repository() {
                                     </span>
                                     
                                     {post.subcategory && (
-                                        <span className="flex items-center gap-1.5 text-xs text-muted-foreground font-medium bg-secondary px-3 py-1.5 rounded-full">
+                                        <span className="flex items-center gap-1.5 text-xs text-muted-foreground font-medium bg-secondary px-3 py-1 rounded-full">
                                             {post.subcategory}
                                         </span>
                                     )}
@@ -409,26 +402,32 @@ export default function Repository() {
                             </div>
 
                             {/* Title - Clickable to go to post */}
-                            <Link to={`/post/${post.id}`} className={cn("block mt-3 relative z-10", viewMode === 'grid' && "flex-grow")}>
-                                <h3 className="text-xl md:text-2xl font-serif font-bold text-foreground hover:text-primary transition-colors leading-tight pr-10">
+                            <Link 
+                                to={`/post/${post.id}`} 
+                                onClick={(e) => e.stopPropagation()} 
+                                className={cn("block mt-4 relative z-10", viewMode === 'grid' && "flex-grow")}
+                            >
+                                <h3 className="text-xl md:text-2xl font-serif font-bold text-foreground hover:text-primary transition-colors leading-tight">
                                     {post.title}
                                 </h3>
-                                
-                                {/* Redesigned Pin Note (Elegant Blockquote) */}
-                                {post.is_pinned && post.summary && (
-                                    <div className="mt-4 mb-2 pl-4 border-l-2 border-primary/40">
-                                        <p className="text-sm text-foreground/80 italic font-serif leading-relaxed">
-                                            "{post.summary}"
-                                        </p>
-                                    </div>
-                                )}
-
-                                {viewMode === 'grid' && (
-                                    <p className="text-muted-foreground text-sm line-clamp-2 leading-relaxed mt-3">
-                                        {post.excerpt || post.content.substring(0, 150) + "..."}
-                                    </p>
-                                )}
                             </Link>
+
+                            {/* Redesigned Pin Note (Soft Pastel Box) */}
+                            {post.is_pinned && post.summary && (
+                                <div className="mt-4 mb-2 bg-primary/5 border border-primary/10 rounded-2xl p-4 flex items-start gap-3 relative z-10">
+                                    <Quote size={16} className="text-primary mt-0.5 shrink-0" />
+                                    <p className="text-sm text-foreground/80 italic font-medium leading-relaxed">
+                                        {post.summary}
+                                    </p>
+                                </div>
+                            )}
+
+                            {/* Excerpt for Grid View */}
+                            {viewMode === 'grid' && (
+                                <p className="text-muted-foreground text-sm line-clamp-2 leading-relaxed mt-3 relative z-10">
+                                    {post.excerpt || post.content.substring(0, 150) + "..."}
+                                </p>
+                            )}
 
                             {/* Expandable Body (List View) or Static Footer (Grid View) */}
                             <AnimatePresence>
@@ -474,6 +473,7 @@ export default function Repository() {
                                                         <div className="flex items-center gap-1 border-x border-border px-2 mx-1">
                                                             <Link 
                                                                 to={`/editor/${post.id}`}
+                                                                onClick={(e) => e.stopPropagation()}
                                                                 className="p-2 rounded-full hover:bg-secondary transition-colors text-muted-foreground hover:text-primary"
                                                                 title="Edit Post"
                                                             >
@@ -503,7 +503,11 @@ export default function Repository() {
                                                         </div>
                                                     )}
                                                     
-                                                    <Link to={`/post/${post.id}`} className="inline-flex items-center gap-2 text-xs font-bold text-primary bg-primary/10 hover:bg-primary hover:text-primary-foreground px-4 py-2 rounded-full transition-colors">
+                                                    <Link 
+                                                        to={`/post/${post.id}`} 
+                                                        onClick={(e) => e.stopPropagation()}
+                                                        className="inline-flex items-center gap-2 text-xs font-bold text-primary bg-primary/10 hover:bg-primary hover:text-primary-foreground px-4 py-2 rounded-full transition-colors"
+                                                    >
                                                         Read Full <ChevronRight size={14} />
                                                     </Link>
                                                 </div>
@@ -513,23 +517,16 @@ export default function Repository() {
                                 )}
                             </AnimatePresence>
 
-                            {/* User Friendly Expand Button for List View */}
+                            {/* Aesthetic Visual Indicator for Expand/Collapse (No Text) */}
                             {viewMode === 'list' && (
-                                <button
-                                    onClick={(e) => toggleExpand(e, post.id)}
-                                    className={cn(
-                                        "mt-4 w-full py-2.5 rounded-xl text-xs font-bold transition-colors flex items-center justify-center gap-2",
-                                        isExpanded 
-                                            ? "bg-secondary text-foreground" 
-                                            : "bg-secondary/50 text-muted-foreground hover:bg-secondary hover:text-foreground"
-                                    )}
-                                >
-                                    {isExpanded ? (
-                                        <><ChevronUp size={14} /> Tutup Detail</>
-                                    ) : (
-                                        <><ChevronDown size={14} /> Lihat Detail</>
-                                    )}
-                                </button>
+                                <div className="w-full flex justify-center mt-3 relative z-10">
+                                    <div className={cn(
+                                        "w-8 h-8 rounded-full bg-secondary/50 flex items-center justify-center text-muted-foreground transition-all duration-300 group-hover:bg-primary/10 group-hover:text-primary",
+                                        isExpanded ? "rotate-180" : "rotate-0"
+                                    )}>
+                                        <ChevronDown size={18} />
+                                    </div>
+                                </div>
                             )}
                         </motion.div>
                         );
