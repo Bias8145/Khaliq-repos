@@ -2,9 +2,9 @@ import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { supabase, type Post } from '../lib/supabase';
 import { format } from 'date-fns';
-import { Eye, EyeOff, Plus, Search, ChevronRight, Filter, Layers, Trash2, Heart, Users, MousePointerClick, TrendingUp, Archive, Pin, PinOff, User, ExternalLink, Github, Cpu, Database, Smartphone, LayoutGrid, List } from 'lucide-react';
+import { Eye, EyeOff, Plus, Search, ChevronRight, Filter, Layers, Trash2, Heart, Users, MousePointerClick, TrendingUp, Archive, Pin, PinOff, User, ExternalLink, Github, Cpu, Database, Smartphone, LayoutGrid, List, ChevronDown, Clock, X, Link as LinkIcon } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { cn } from '../lib/utils';
+import { cn, calculateReadingTime } from '../lib/utils';
 import { useToast } from '../components/ui/Toast';
 import { useLanguage } from '../lib/language';
 import { ConfirmDialog } from '../components/ui/ConfirmDialog';
@@ -17,6 +17,9 @@ export default function Repository() {
   const [isAdmin, setIsAdmin] = useState(false);
   const [activeTab, setActiveTab] = useState('All');
   const [viewMode, setViewMode] = useState<'list' | 'grid'>('list');
+  
+  // State for Accordion (Expanded Panels)
+  const [expandedPosts, setExpandedPosts] = useState<Set<string>>(new Set());
   
   // Analytics State
   const [siteVisits, setSiteVisits] = useState(0);
@@ -88,9 +91,32 @@ export default function Repository() {
     }
   };
 
+  // Toggle Accordion Panel
+  const toggleExpand = (e: React.MouseEvent, id: string) => {
+      e.preventDefault();
+      e.stopPropagation();
+      const newSet = new Set(expandedPosts);
+      if (newSet.has(id)) {
+          newSet.delete(id);
+      } else {
+          newSet.add(id);
+      }
+      setExpandedPosts(newSet);
+  };
+
+  // Quick Copy Link
+  const handleCopyLink = (e: React.MouseEvent, id: string) => {
+      e.preventDefault();
+      e.stopPropagation();
+      const url = `${window.location.origin}/post/${id}`;
+      navigator.clipboard.writeText(url);
+      toast(t('post.linkCopied'), "success");
+  };
+
   // Admin Actions
   const confirmDelete = (e: React.MouseEvent, id: string) => {
     e.preventDefault();
+    e.stopPropagation();
     setDeleteId(id);
   };
 
@@ -111,6 +137,7 @@ export default function Repository() {
 
   const toggleVisibility = async (e: React.MouseEvent, post: Post) => {
     e.preventDefault();
+    e.stopPropagation();
     const newIsPublic = !post.is_public;
 
     try {
@@ -134,6 +161,7 @@ export default function Repository() {
 
   const togglePin = async (e: React.MouseEvent, post: Post) => {
     e.preventDefault();
+    e.stopPropagation();
     const newIsPinned = !post.is_pinned;
 
     try {
@@ -196,8 +224,8 @@ export default function Repository() {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="animate-pulse flex flex-col items-center gap-4">
-            <div className="h-12 w-12 bg-primary/20 rounded-xl"></div>
-            <div className="h-4 w-32 bg-secondary rounded"></div>
+            <div className="h-12 w-12 bg-primary/20 rounded-full"></div>
+            <div className="h-4 w-32 bg-secondary rounded-full"></div>
         </div>
       </div>
     );
@@ -212,7 +240,7 @@ export default function Repository() {
   if (isAdmin) tabs.push({ id: 'Drafts', label: t('repo.tabs.drafts') });
 
   return (
-    <div className="min-h-screen pt-28 px-5 md:px-8 max-w-7xl mx-auto pb-20">
+    <div className="min-h-screen pt-32 px-5 md:px-8 max-w-7xl mx-auto pb-20">
       <ConfirmDialog 
         isOpen={!!deleteId}
         title={t('repo.deleteTitle')}
@@ -231,8 +259,8 @@ export default function Repository() {
             {/* Header Section */}
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
                 <div>
-                    <div className="inline-flex items-center gap-3 px-3 py-1 mb-4 rounded-full bg-secondary/50 text-foreground text-[10px] font-bold tracking-[0.2em] uppercase border border-border/50">
-                        <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse"></span>
+                    <div className="inline-flex items-center gap-3 px-4 py-1.5 mb-4 rounded-full bg-secondary text-foreground text-[10px] font-bold tracking-[0.2em] uppercase border border-border/50">
+                        <span className="w-2 h-2 rounded-full bg-primary animate-pulse shadow-[0_0_8px_rgba(212,175,55,0.8)]"></span>
                         Digital Garden
                     </div>
                     <h1 className="text-3xl md:text-5xl font-serif font-bold text-foreground mb-3 tracking-tight">
@@ -244,23 +272,25 @@ export default function Repository() {
                 </div>
                 
                 {isAdmin && (
-                    <Link to="/editor/new" className="flex items-center gap-2 px-6 py-3 rounded-xl bg-primary text-primary-foreground font-bold hover:opacity-90 transition-all shadow-lg shadow-primary/20 group shrink-0">
+                    <Link to="/editor/new" className="flex items-center gap-2 px-6 py-4 rounded-full bg-primary text-primary-foreground font-bold hover:opacity-90 transition-all shadow-xl shadow-primary/20 group shrink-0">
                         <Plus size={20} className="group-hover:rotate-90 transition-transform" /> 
                         {t('repo.newEntry')}
                     </Link>
                 )}
             </div>
 
-            {/* Filters & Search */}
-            <div className="bg-card border border-border rounded-2xl p-4 shadow-sm flex flex-col md:flex-row gap-4 justify-between items-center sticky top-20 z-30 backdrop-blur-xl bg-card/80">
-                <div className="flex gap-2 overflow-x-auto w-full md:w-auto pb-2 md:pb-0 no-scrollbar">
+            {/* Filters & Search - Floating Dock */}
+            <div className="bg-card/90 backdrop-blur-2xl border border-border/50 rounded-[2rem] p-3 shadow-lg shadow-black/5 flex flex-col md:flex-row gap-4 justify-between items-center sticky top-[6.5rem] z-30 transition-all">
+                
+                {/* Segmented Control Style Tabs */}
+                <div className="flex gap-1 overflow-x-auto w-full md:w-auto p-1 bg-secondary/30 rounded-[1.5rem] no-scrollbar">
                     {tabs.map(tab => (
                         <button
                             key={tab.id}
                             onClick={() => setActiveTab(tab.id)}
                             className={cn(
-                                "px-4 py-2 rounded-lg text-sm font-bold transition-all whitespace-nowrap",
-                                activeTab === tab.id ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:bg-secondary hover:text-foreground"
+                                "px-5 py-2 rounded-[1.2rem] text-sm font-bold transition-all whitespace-nowrap",
+                                activeTab === tab.id ? "bg-background text-foreground shadow-sm ring-1 ring-border" : "text-muted-foreground hover:text-foreground"
                             )}
                         >
                             {tab.label}
@@ -269,26 +299,34 @@ export default function Repository() {
                 </div>
 
                 <div className="flex items-center gap-3 w-full md:w-auto">
-                    <div className="relative w-full md:w-64">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={16} />
+                    <div className="relative w-full md:w-64 flex items-center">
+                        <Search className="absolute left-4 text-muted-foreground" size={18} />
                         <input 
                             type="text" 
                             placeholder={t('repo.search')} 
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
-                            className="w-full bg-secondary/50 border border-transparent rounded-lg py-2 pl-10 pr-4 text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all"
+                            className="w-full bg-secondary/50 border border-transparent rounded-full py-3 pl-12 pr-10 text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all"
                         />
+                        {searchQuery && (
+                            <button 
+                                onClick={() => setSearchQuery('')}
+                                className="absolute right-3 p-1.5 rounded-full bg-background text-muted-foreground hover:text-foreground shadow-sm"
+                            >
+                                <X size={14} />
+                            </button>
+                        )}
                     </div>
-                    <div className="hidden md:flex bg-secondary/50 rounded-lg p-1 border border-border/50">
+                    <div className="hidden md:flex bg-secondary/30 rounded-full p-1 border border-border/50">
                         <button 
                             onClick={() => setViewMode('list')} 
-                            className={cn("p-1.5 rounded-md transition-colors", viewMode === 'list' ? "bg-background shadow-sm text-primary" : "text-muted-foreground")}
+                            className={cn("p-2 rounded-full transition-colors", viewMode === 'list' ? "bg-background shadow-sm text-primary" : "text-muted-foreground hover:text-foreground")}
                         >
                             <List size={16} />
                         </button>
                         <button 
                             onClick={() => setViewMode('grid')} 
-                            className={cn("p-1.5 rounded-md transition-colors", viewMode === 'grid' ? "bg-background shadow-sm text-primary" : "text-muted-foreground")}
+                            className={cn("p-2 rounded-full transition-colors", viewMode === 'grid' ? "bg-background shadow-sm text-primary" : "text-muted-foreground hover:text-foreground")}
                         >
                             <LayoutGrid size={16} />
                         </button>
@@ -298,119 +336,175 @@ export default function Repository() {
 
             {/* Posts List / Grid */}
             <div className={cn(
-                viewMode === 'grid' ? "grid grid-cols-1 md:grid-cols-2 gap-4" : "space-y-4"
+                viewMode === 'grid' ? "grid grid-cols-1 md:grid-cols-2 gap-5" : "space-y-4"
             )}>
                 <AnimatePresence>
-                    {filteredPosts.map((post, index) => (
-                    <motion.div
-                        key={post.id}
-                        layout
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, scale: 0.95 }}
-                        transition={{ delay: index * 0.05, duration: 0.2 }}
-                    >
-                        <Link to={`/post/${post.id}`} className="block group h-full">
-                        <div className={cn(
-                            "bg-card border rounded-2xl p-6 transition-all duration-300 relative overflow-hidden h-full flex flex-col",
-                            post.status === 'draft' ? "border-orange-500/30 bg-orange-500/5" : "border-border hover:shadow-xl hover:shadow-primary/5 hover:border-primary/30",
-                            post.is_pinned && "border-l-4 border-l-primary"
-                        )}>
+                    {filteredPosts.map((post, index) => {
+                        const isExpanded = expandedPosts.has(post.id);
+                        const readTime = calculateReadingTime(post.content);
+
+                        return (
+                        <motion.div
+                            key={post.id}
+                            layout
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, scale: 0.95 }}
+                            transition={{ delay: index * 0.05, duration: 0.2 }}
+                            className={cn(
+                                "bg-card border rounded-[2rem] transition-all duration-300 relative overflow-hidden flex flex-col",
+                                post.status === 'draft' ? "border-orange-500/30 bg-orange-500/5" : "border-border hover:border-primary/30",
+                                viewMode === 'list' ? "p-5 md:p-6" : "p-6 md:p-8 hover:shadow-xl hover:shadow-primary/5 h-full"
+                            )}
+                        >
                             {post.status === 'draft' && (
-                                <div className="absolute top-0 right-0 px-3 py-1 bg-orange-500 text-white text-[10px] font-bold uppercase tracking-wider rounded-bl-xl">
+                                <div className="absolute top-0 right-0 px-4 py-1.5 bg-orange-500 text-white text-[10px] font-bold uppercase tracking-wider rounded-bl-2xl">
                                     Draft
                                 </div>
                             )}
-                            
-                            {post.is_pinned && !post.status && (
-                                <div className="absolute top-0 right-0 px-3 py-1 bg-primary text-primary-foreground text-[10px] font-bold uppercase tracking-wider rounded-bl-xl flex items-center gap-1">
-                                    <Pin size={10} className="fill-current" /> Pinned
+
+                            {/* Pinned Post Indicator & Note */}
+                            {post.is_pinned && (
+                                <div className="mb-5 bg-primary/5 border border-primary/20 rounded-[1.5rem] p-4 flex flex-col gap-2">
+                                    <div className="flex items-center gap-2 text-primary text-xs font-bold uppercase tracking-wider">
+                                        <Pin size={14} className="fill-current" /> Pinned
+                                    </div>
+                                    {post.summary && (
+                                        <p className="text-sm text-foreground/80 italic border-l-2 border-primary/50 pl-3 py-0.5">
+                                            "{post.summary}"
+                                        </p>
+                                    )}
                                 </div>
                             )}
-                            
-                            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4">
+
+                            {/* Compact Header (Always Visible) */}
+                            <div 
+                                className={cn("flex flex-col md:flex-row md:items-center justify-between gap-4 cursor-pointer group", viewMode === 'grid' && "mb-5")}
+                                onClick={(e) => viewMode === 'list' ? toggleExpand(e, post.id) : null}
+                            >
                                 <div className="flex flex-wrap items-center gap-2">
                                     <span className={cn(
-                                        "px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider border",
+                                        "px-3 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-wider border",
                                         post.category === 'Catatan' ? "bg-blue-500/10 text-blue-600 border-blue-500/20" :
                                         post.category === 'Penelitian' ? "bg-purple-500/10 text-purple-600 border-purple-500/20" :
-                                        "bg-emerald-500/10 text-emerald-600 border-emerald-500/20"
+                                        "bg-primary/10 text-primary border-primary/20"
                                     )}>
                                         {post.category || 'Umum'}
                                     </span>
                                     
                                     {post.subcategory && (
-                                        <span className="flex items-center gap-1 text-xs text-muted-foreground font-medium">
-                                            <span className="w-1 h-1 rounded-full bg-muted-foreground/50"></span>
+                                        <span className="flex items-center gap-1.5 text-xs text-muted-foreground font-medium bg-secondary/50 px-3 py-1.5 rounded-full">
                                             {post.subcategory}
                                         </span>
                                     )}
                                 </div>
                                 
-                                <span className="text-[10px] text-muted-foreground font-mono uppercase tracking-wider">
-                                    {format(new Date(post.created_at), 'MMM d, yyyy')}
-                                </span>
+                                <div className="flex items-center gap-3">
+                                    <span className="text-[10px] text-muted-foreground font-mono uppercase tracking-wider flex items-center gap-1">
+                                        <Clock size={12} /> {format(new Date(post.created_at), 'MMM d, yyyy')}
+                                    </span>
+                                    {viewMode === 'list' && (
+                                        <button className="p-1.5 rounded-full bg-secondary/50 text-muted-foreground group-hover:bg-primary/10 group-hover:text-primary transition-colors">
+                                            <ChevronDown size={16} className={cn("transition-transform duration-300", isExpanded && "rotate-180")} />
+                                        </button>
+                                    )}
+                                </div>
                             </div>
 
-                            <div className={cn("flex-grow", viewMode === 'list' && "flex flex-col md:flex-row justify-between items-start md:items-end gap-4")}>
-                                <div className={cn("w-full", viewMode === 'list' && "max-w-2xl")}>
-                                    <h3 className="text-xl font-serif font-bold text-foreground mb-2 group-hover:text-primary transition-colors flex items-center gap-2 leading-tight">
-                                        {post.title}
-                                    </h3>
-                                    <p className="text-muted-foreground text-sm line-clamp-2 leading-relaxed">
+                            {/* Title - Clickable to go to post */}
+                            <Link to={`/post/${post.id}`} className={cn("block mt-3", viewMode === 'grid' && "flex-grow")}>
+                                <h3 className="text-xl md:text-2xl font-serif font-bold text-foreground hover:text-primary transition-colors leading-tight">
+                                    {post.title}
+                                </h3>
+                                {viewMode === 'grid' && (
+                                    <p className="text-muted-foreground text-sm line-clamp-2 leading-relaxed mt-3">
                                         {post.excerpt || post.content.substring(0, 150) + "..."}
                                     </p>
-                                </div>
-                                
-                                <div className={cn("flex items-center justify-between w-full md:w-auto gap-4 text-muted-foreground", viewMode === 'grid' ? "mt-6 pt-4 border-t border-border/50" : "mt-4 md:mt-0")}>
-                                    <div className="flex items-center gap-3">
-                                        <span className="flex items-center gap-1.5 text-xs font-medium" title="Views">
-                                            <Eye size={14} /> {post.view_count || 0}
-                                        </span>
-                                        <span className="flex items-center gap-1.5 text-xs font-medium" title="Likes">
-                                            <Heart size={14} /> {post.likes || 0}
-                                        </span>
-                                    </div>
-                                    
-                                    {isAdmin && (
-                                        <div className="flex items-center gap-1 border-l border-border pl-3 ml-1">
-                                            <button 
-                                                onClick={(e) => togglePin(e, post)}
-                                                className={cn("p-1.5 rounded-md hover:bg-secondary transition-colors", post.is_pinned ? "text-primary" : "text-muted-foreground")}
-                                                title={post.is_pinned ? t('repo.unpin') : t('repo.pin')}
-                                            >
-                                                {post.is_pinned ? <PinOff size={14} /> : <Pin size={14} />}
-                                            </button>
-                                            <button 
-                                                onClick={(e) => toggleVisibility(e, post)}
-                                                className={cn("p-1.5 rounded-md hover:bg-secondary transition-colors", post.is_public ? "text-emerald-500" : "text-orange-500")}
-                                                title={post.is_public ? t('repo.makePrivate') : t('repo.makePublic')}
-                                            >
-                                                {post.is_public ? <Eye size={14} /> : <EyeOff size={14} />}
-                                            </button>
-                                            <button 
-                                                onClick={(e) => confirmDelete(e, post.id)}
-                                                className="p-1.5 rounded-md hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors"
-                                                title={t('repo.delete')}
-                                            >
-                                                <Trash2 size={14} />
-                                            </button>
+                                )}
+                            </Link>
+
+                            {/* Expandable Body (List View) or Static Footer (Grid View) */}
+                            <AnimatePresence>
+                                {(isExpanded || viewMode === 'grid') && (
+                                    <motion.div
+                                        initial={viewMode === 'list' ? { height: 0, opacity: 0, marginTop: 0 } : false}
+                                        animate={viewMode === 'list' ? { height: 'auto', opacity: 1, marginTop: 16 } : false}
+                                        exit={viewMode === 'list' ? { height: 0, opacity: 0, marginTop: 0 } : false}
+                                        className="overflow-hidden"
+                                    >
+                                        <div className={cn("flex flex-col gap-4", viewMode === 'grid' ? "mt-6 pt-5 border-t border-border/50" : "pt-4 border-t border-border/50")}>
+                                            
+                                            {viewMode === 'list' && (
+                                                <p className="text-muted-foreground text-sm leading-relaxed">
+                                                    {post.excerpt || post.content.substring(0, 200) + "..."}
+                                                </p>
+                                            )}
+
+                                            <div className="flex items-center justify-between w-full flex-wrap gap-4">
+                                                <div className="flex items-center gap-3 text-muted-foreground">
+                                                    <span className="flex items-center gap-1.5 text-xs font-medium bg-secondary/50 px-3 py-1.5 rounded-full" title="Views">
+                                                        <Eye size={14} /> {post.view_count || 0}
+                                                    </span>
+                                                    <span className="flex items-center gap-1.5 text-xs font-medium bg-secondary/50 px-3 py-1.5 rounded-full" title="Likes">
+                                                        <Heart size={14} /> {post.likes || 0}
+                                                    </span>
+                                                    <span className="flex items-center gap-1.5 text-xs font-medium bg-secondary/50 px-3 py-1.5 rounded-full" title="Est. Read Time">
+                                                        <Clock size={14} /> {readTime} min
+                                                    </span>
+                                                </div>
+                                                
+                                                <div className="flex items-center gap-2">
+                                                    {/* Quick Copy Link Button */}
+                                                    <button 
+                                                        onClick={(e) => handleCopyLink(e, post.id)}
+                                                        className="p-2 rounded-full bg-secondary/50 text-muted-foreground hover:bg-primary/10 hover:text-primary transition-colors"
+                                                        title={t('post.copyLink')}
+                                                    >
+                                                        <LinkIcon size={14} />
+                                                    </button>
+
+                                                    {isAdmin && (
+                                                        <div className="flex items-center gap-1 border-x border-border px-2 mx-1">
+                                                            <button 
+                                                                onClick={(e) => togglePin(e, post)}
+                                                                className={cn("p-2 rounded-full hover:bg-secondary transition-colors", post.is_pinned ? "text-primary bg-primary/10" : "text-muted-foreground")}
+                                                                title={post.is_pinned ? t('repo.unpin') : t('repo.pin')}
+                                                            >
+                                                                {post.is_pinned ? <PinOff size={14} /> : <Pin size={14} />}
+                                                            </button>
+                                                            <button 
+                                                                onClick={(e) => toggleVisibility(e, post)}
+                                                                className={cn("p-2 rounded-full hover:bg-secondary transition-colors", post.is_public ? "text-emerald-500 bg-emerald-500/10" : "text-orange-500 bg-orange-500/10")}
+                                                                title={post.is_public ? t('repo.makePrivate') : t('repo.makePublic')}
+                                                            >
+                                                                {post.is_public ? <Eye size={14} /> : <EyeOff size={14} />}
+                                                            </button>
+                                                            <button 
+                                                                onClick={(e) => confirmDelete(e, post.id)}
+                                                                className="p-2 rounded-full hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors"
+                                                                title={t('repo.delete')}
+                                                            >
+                                                                <Trash2 size={14} />
+                                                            </button>
+                                                        </div>
+                                                    )}
+                                                    
+                                                    <Link to={`/post/${post.id}`} className="inline-flex items-center gap-2 text-xs font-bold text-primary bg-primary/10 hover:bg-primary hover:text-primary-foreground px-4 py-2 rounded-full transition-colors">
+                                                        Read Full <ChevronRight size={14} />
+                                                    </Link>
+                                                </div>
+                                            </div>
                                         </div>
-                                    )}
-                                    
-                                    {!isAdmin && viewMode === 'list' && (
-                                        <ChevronRight size={18} className="text-muted-foreground/30 group-hover:text-primary group-hover:translate-x-1 transition-all ml-auto md:ml-0" />
-                                    )}
-                                </div>
-                            </div>
-                        </div>
-                        </Link>
-                    </motion.div>
-                    ))}
+                                    </motion.div>
+                                )}
+                            </AnimatePresence>
+                        </motion.div>
+                        );
+                    })}
                 </AnimatePresence>
 
                 {filteredPosts.length === 0 && (
-                    <div className="col-span-full text-center py-24 text-muted-foreground bg-secondary/20 rounded-3xl border border-dashed border-border">
+                    <div className="col-span-full text-center py-24 text-muted-foreground bg-secondary/20 rounded-[2.5rem] border border-dashed border-border">
                         <div className="w-16 h-16 bg-secondary rounded-full flex items-center justify-center mx-auto mb-4 text-muted-foreground">
                             <Filter size={24} />
                         </div>
@@ -429,37 +523,37 @@ export default function Repository() {
         <div className="lg:col-span-4 space-y-6">
             
             {/* Profile Card */}
-            <div className="bg-card border border-border rounded-3xl p-6 relative overflow-hidden group hover:border-primary/30 transition-colors shadow-sm">
+            <div className="bg-card border border-border rounded-[2.5rem] p-8 relative overflow-hidden group hover:border-primary/30 transition-colors shadow-sm">
                 <div className="absolute top-0 right-0 p-6 opacity-5 group-hover:opacity-10 transition-opacity pointer-events-none">
                     <User size={120} />
                 </div>
                 
                 <div className="relative z-10">
-                    <div className="flex items-center gap-4 mb-5">
-                        <div className="w-14 h-14 rounded-full bg-secondary border border-primary/20 flex items-center justify-center text-primary">
-                            <User size={24} />
+                    <div className="flex items-center gap-4 mb-6">
+                        <div className="w-16 h-16 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center text-primary">
+                            <User size={28} />
                         </div>
                         <div>
-                            <h3 className="text-lg font-bold text-foreground leading-tight">Bias Fajar Khaliq</h3>
-                            <p className="text-xs text-primary font-medium mt-0.5">Industrial Professional & Dev</p>
+                            <h3 className="text-xl font-bold text-foreground leading-tight">Bias Fajar Khaliq</h3>
+                            <p className="text-xs text-primary font-bold mt-1 uppercase tracking-wider">Industrial Pro & Dev</p>
                         </div>
                     </div>
 
-                    <p className="text-sm text-muted-foreground leading-relaxed mb-6">
+                    <p className="text-sm text-muted-foreground leading-relaxed mb-8">
                         Specializing in <strong>Water Treatment Technology</strong> and <strong>Android System Development</strong>. Driven by efficiency, HSE compliance, and open-source collaboration.
                     </p>
 
-                    <div className="flex flex-wrap gap-2 mb-6">
-                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-secondary/50 border border-border text-[10px] font-bold text-foreground"><Cpu size={12} /> AutoCAD</span>
-                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-secondary/50 border border-border text-[10px] font-bold text-foreground"><Database size={12} /> Data Analysis</span>
-                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-secondary/50 border border-border text-[10px] font-bold text-foreground"><Smartphone size={12} /> Android Dev</span>
+                    <div className="flex flex-wrap gap-2 mb-8">
+                        <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-secondary/80 text-[10px] font-bold text-foreground"><Cpu size={12} /> AutoCAD</span>
+                        <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-secondary/80 text-[10px] font-bold text-foreground"><Database size={12} /> Data Analysis</span>
+                        <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-secondary/80 text-[10px] font-bold text-foreground"><Smartphone size={12} /> Android Dev</span>
                     </div>
 
-                    <div className="flex gap-3 pt-4 border-t border-border/50">
-                        <a href="https://xdaforums.com/m/khaliq-morpheus.13212421/" target="_blank" rel="noreferrer" className="flex-1 inline-flex justify-center items-center gap-2 text-xs font-bold text-foreground bg-secondary/50 py-2.5 rounded-xl hover:bg-primary hover:text-primary-foreground transition-colors border border-border">
+                    <div className="flex gap-3 pt-6 border-t border-border/50">
+                        <a href="https://xdaforums.com/m/khaliq-morpheus.13212421/" target="_blank" rel="noreferrer" className="flex-1 inline-flex justify-center items-center gap-2 text-xs font-bold text-foreground bg-secondary/50 py-3 rounded-full hover:bg-primary hover:text-primary-foreground transition-colors border border-transparent hover:border-primary/20">
                             XDA Profile <ExternalLink size={12} />
                         </a>
-                        <a href="https://github.com/Bias8145" target="_blank" rel="noreferrer" className="flex-1 inline-flex justify-center items-center gap-2 text-xs font-bold text-foreground bg-secondary/50 py-2.5 rounded-xl hover:bg-primary hover:text-primary-foreground transition-colors border border-border">
+                        <a href="https://github.com/Bias8145" target="_blank" rel="noreferrer" className="flex-1 inline-flex justify-center items-center gap-2 text-xs font-bold text-foreground bg-secondary/50 py-3 rounded-full hover:bg-primary hover:text-primary-foreground transition-colors border border-transparent hover:border-primary/20">
                             GitHub <Github size={12} />
                         </a>
                     </div>
@@ -467,44 +561,44 @@ export default function Repository() {
             </div>
 
             {/* Public Stats Overview */}
-            <div className="bg-card border border-border rounded-3xl p-6 shadow-sm">
-                <h3 className="text-sm font-bold text-foreground uppercase tracking-wider mb-4 flex items-center gap-2">
-                    <TrendingUp size={16} className="text-primary" /> Repository Stats
+            <div className="bg-card border border-border rounded-[2.5rem] p-8 shadow-sm">
+                <h3 className="text-sm font-bold text-foreground uppercase tracking-wider mb-6 flex items-center gap-2">
+                    <TrendingUp size={18} className="text-primary" /> Repository Stats
                 </h3>
-                <div className="grid grid-cols-2 gap-3">
-                    <div className="bg-secondary/30 p-4 rounded-2xl border border-border/50">
-                        <p className="text-2xl font-serif font-bold text-foreground">{stats.public}</p>
-                        <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mt-1">Public Entries</p>
+                <div className="grid grid-cols-2 gap-4">
+                    <div className="bg-secondary/30 p-5 rounded-[1.5rem] border border-border/50">
+                        <p className="text-3xl font-serif font-bold text-foreground">{stats.public}</p>
+                        <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mt-2">Public Entries</p>
                     </div>
-                    <div className="bg-secondary/30 p-4 rounded-2xl border border-border/50">
-                        <p className="text-2xl font-serif font-bold text-foreground">{stats.research}</p>
-                        <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mt-1">Research Papers</p>
+                    <div className="bg-secondary/30 p-5 rounded-[1.5rem] border border-border/50">
+                        <p className="text-3xl font-serif font-bold text-foreground">{stats.research}</p>
+                        <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mt-2">Research Papers</p>
                     </div>
-                    <div className="bg-secondary/30 p-4 rounded-2xl border border-border/50">
-                        <p className="text-2xl font-serif font-bold text-foreground">{totalViews}</p>
-                        <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mt-1">Total Reads</p>
+                    <div className="bg-secondary/30 p-5 rounded-[1.5rem] border border-border/50">
+                        <p className="text-3xl font-serif font-bold text-foreground">{totalViews}</p>
+                        <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mt-2">Total Reads</p>
                     </div>
-                    <div className="bg-secondary/30 p-4 rounded-2xl border border-border/50">
-                        <p className="text-2xl font-serif font-bold text-foreground">{totalLikes}</p>
-                        <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mt-1">Appreciations</p>
+                    <div className="bg-secondary/30 p-5 rounded-[1.5rem] border border-border/50">
+                        <p className="text-3xl font-serif font-bold text-foreground">{totalLikes}</p>
+                        <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mt-2">Appreciations</p>
                     </div>
                 </div>
             </div>
 
-            {/* Admin Extra Stats (Only visible to Admin) */}
+            {/* Admin Extra Stats */}
             {isAdmin && (
-                <div className="bg-primary/5 border border-primary/20 rounded-3xl p-6 shadow-sm">
-                    <h3 className="text-sm font-bold text-primary uppercase tracking-wider mb-4 flex items-center gap-2">
-                        <Layers size={16} /> Admin Overview
+                <div className="bg-primary/5 border border-primary/20 rounded-[2.5rem] p-8 shadow-sm">
+                    <h3 className="text-sm font-bold text-primary uppercase tracking-wider mb-6 flex items-center gap-2">
+                        <Layers size={18} /> Admin Overview
                     </h3>
-                    <div className="space-y-3">
-                        <div className="flex items-center justify-between bg-card p-3 rounded-xl border border-border">
-                            <span className="text-xs font-bold text-muted-foreground">Drafts</span>
-                            <span className="text-sm font-bold text-orange-500">{stats.drafts}</span>
+                    <div className="space-y-4">
+                        <div className="flex items-center justify-between bg-background p-4 rounded-2xl border border-border/50 shadow-sm">
+                            <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Drafts</span>
+                            <span className="text-lg font-bold text-orange-500">{stats.drafts}</span>
                         </div>
-                        <div className="flex items-center justify-between bg-card p-3 rounded-xl border border-border">
-                            <span className="text-xs font-bold text-muted-foreground">Visitors Today</span>
-                            <span className="text-sm font-bold text-blue-500">{siteVisits}</span>
+                        <div className="flex items-center justify-between bg-background p-4 rounded-2xl border border-border/50 shadow-sm">
+                            <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Visitors Today</span>
+                            <span className="text-lg font-bold text-blue-500">{siteVisits}</span>
                         </div>
                     </div>
                 </div>

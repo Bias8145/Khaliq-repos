@@ -10,68 +10,71 @@
     /* Dynamic Font Base */
     --base-font-size: 16px;
 
-    /* Light Mode - Soft Paper, Muted Gold */
-    --background: 0 0% 99%; /* #FCFCFC - Even cleaner white */
-    --foreground: 240 4% 16%; /* #27272A */
+    /* Light Mode - Softer Cream & Muted Gold */
+    --background: 40 25% 96%; /* Softer, warmer off-white (Cream) */
+    --foreground: 40 15% 25%; /* Softer charcoal, less harsh than pure black */
     
-    --card: 0 0% 100%;
-    --card-foreground: 240 4% 16%;
+    --card: 40 20% 98%; /* Slightly lighter than background */
+    --card-foreground: 40 15% 25%;
     
-    --popover: 0 0% 100%;
-    --popover-foreground: 240 4% 16%;
+    --popover: 40 20% 98%;
+    --popover-foreground: 40 15% 25%;
     
-    /* Soft Muted Gold - Elegant, not Yellow */
-    --primary: 35 20% 50%; /* Desaturated Gold */
+    /* Primary: Soft Warm Gold / Bronze */
+    --primary: 35 45% 50%; 
     --primary-foreground: 0 0% 100%;
     
-    --secondary: 240 4% 96%;
-    --secondary-foreground: 240 4% 16%;
+    /* Secondary: Very soft tonal background */
+    --secondary: 40 15% 90%;
+    --secondary-foreground: 40 15% 30%;
     
-    --muted: 240 4% 96%;
-    --muted-foreground: 240 2% 50%;
+    --muted: 40 15% 90%;
+    --muted-foreground: 40 10% 50%;
     
-    --accent: 35 25% 96%;
-    --accent-foreground: 35 25% 40%;
+    --accent: 35 45% 90%;
+    --accent-foreground: 35 45% 30%;
     
-    --destructive: 0 84.2% 60.2%;
+    --destructive: 0 70% 60%;
     --destructive-foreground: 0 0% 98%;
 
-    --border: 240 5% 92%;
-    --input: 240 5% 92%;
-    --ring: 35 20% 50%;
+    --border: 40 15% 86%;
+    --input: 40 15% 86%;
+    --ring: 35 45% 50%;
     
-    --radius: 0.75rem;
+    /* Material 3 Expressive Base Radius */
+    --radius: 1.5rem;
   }
 
   .dark {
-    /* Dark Mode - Soft Charcoal, Matte Gold */
-    --background: 240 4% 10%; /* #18181B */
-    --foreground: 240 5% 90%;
+    /* Dark Mode - Deep Dark with subtle warm tint (True Dark Mode) */
+    --background: 40 6% 6%; /* Very dark, almost black */
+    --foreground: 40 10% 90%; /* Crisp soft white */
     
-    --card: 240 4% 13%; /* Slightly lighter than bg */
-    --card-foreground: 240 5% 90%;
+    --card: 40 6% 9%; /* Slightly elevated from background */
+    --card-foreground: 40 10% 90%;
     
-    --popover: 240 4% 13%;
-    --popover-foreground: 240 5% 90%;
+    --popover: 40 6% 9%;
+    --popover-foreground: 40 10% 90%;
     
-    --primary: 35 30% 60%; /* #C4B59D approx */
-    --primary-foreground: 240 4% 10%;
+    /* Primary: Soft Bright Gold */
+    --primary: 35 55% 60%; 
+    --primary-foreground: 40 10% 12%;
     
-    --secondary: 240 4% 18%;
-    --secondary-foreground: 240 5% 90%;
+    --secondary: 40 6% 14%; /* Distinct tonal difference */
+    --secondary-foreground: 40 10% 90%;
     
-    --muted: 240 4% 18%;
-    --muted-foreground: 240 5% 60%;
+    --muted: 40 6% 14%;
+    --muted-foreground: 40 6% 60%;
     
-    --accent: 35 30% 20%;
-    --accent-foreground: 35 30% 80%;
+    --accent: 35 55% 25%;
+    --accent-foreground: 35 55% 85%;
     
-    --destructive: 0 62.8% 30.6%;
+    --destructive: 0 60% 50%;
     --destructive-foreground: 0 0% 98%;
     
-    --border: 240 4% 20%;
-    --input: 240 4% 20%;
-    --ring: 35 30% 60%;
+    --border: 40 6% 18%; /* Visible but subtle borders */
+    --input: 40 6% 18%;
+    --ring: 35 55% 60%;
   }
 }
 
@@ -97,19 +100,18 @@
 
 /* Typography Overrides for Simplicity */
 .font-serif {
-    /* We override the serif class to be sans-serif if user wants "Simple" */
     font-family: 'Inter', system-ui, sans-serif !important;
 }
 
-/* Custom Scrollbar - Thinner */
+/* Custom Scrollbar - Thinner & Softer */
 ::-webkit-scrollbar {
-    width: 6px;
+    width: 8px;
 }
 ::-webkit-scrollbar-track {
     @apply bg-transparent;
 }
 ::-webkit-scrollbar-thumb {
-    @apply bg-muted-foreground/20 rounded-full hover:bg-muted-foreground/40 transition-colors;
+    @apply bg-muted-foreground/30 rounded-full hover:bg-primary/50 transition-colors border-2 border-solid border-background;
 }
 
 /* Range Input Styling */
@@ -131,19 +133,9 @@ input[type=range]:focus {
   @page {
     margin: 2cm;
   }
-
-  /* Hide everything that isn't the main content */
-  .no-print, 
-  nav, 
-  footer, 
-  aside, 
-  button, 
-  .fixed,
-  .sticky {
+  .no-print, nav, footer, aside, button, .fixed, .sticky {
     display: none !important;
   }
-
-  /* Reset body styles for print */
   body {
     background: white !important;
     color: black !important;
@@ -152,8 +144,6 @@ input[type=range]:focus {
     margin: 0 !important;
     overflow: visible !important;
   }
-
-  /* Ensure the article takes full width */
   article {
     width: 100% !important;
     margin: 0 !important;
@@ -161,33 +151,25 @@ input[type=range]:focus {
     box-shadow: none !important;
     border: none !important;
   }
-
-  /* Typography adjustments for print */
   h1 {
     font-size: 24pt !important;
     margin-bottom: 1cm !important;
     color: black !important;
   }
-
   p, li {
     font-size: 12pt !important;
     line-height: 1.5 !important;
     color: black !important;
     text-align: justify !important;
   }
-
   a {
     text-decoration: underline !important;
     color: black !important;
   }
-  
-  /* Show URL after links */
   a[href]:after {
     content: " (" attr(href) ")";
     font-size: 0.8em;
   }
-
-  /* Hide scrollbars */
   ::-webkit-scrollbar {
     display: none;
   }

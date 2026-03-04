@@ -2,7 +2,7 @@ import React, { useEffect, useState, useRef } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { supabase, type Post } from '../lib/supabase';
 import { format } from 'date-fns';
-import { ArrowLeft, Edit, Clock, Share2, Printer, Heart, Link as LinkIcon, Twitter, Linkedin, MessageCircle, Download, ImageIcon, X, Loader2, Feather, Send, Check, Moon, Sun, RefreshCw, Maximize, Smartphone, Square, Layout, MousePointerClick, TextCursorInput, Globe, Microscope, Book, MessageSquareQuote, FileText, Pin } from 'lucide-react';
+import { ArrowLeft, Edit3, Clock, Share2, Printer, Heart, Link as LinkIcon, Twitter, Linkedin, MessageCircle, Download, ImageIcon, X, Loader2, Feather, Send, Moon, Sun, RefreshCw, Maximize, Smartphone, Square, Layout, MousePointerClick, TextCursorInput, Globe, Microscope, Book, MessageSquareQuote, FileText, Pin, Maximize2, Minimize2, ShieldCheck, Lock, Eye } from 'lucide-react';
 import { calculateReadingTime } from '../lib/utils';
 import { motion, useScroll, useSpring, AnimatePresence } from 'framer-motion';
 import { MarkdownRenderer } from '../components/MarkdownRenderer';
@@ -25,9 +25,12 @@ export default function PostView() {
   const [generatingImage, setGeneratingImage] = useState(false);
   const [liked, setLiked] = useState(false);
   
+  // Fitur Baru: Mode Fokus
+  const [isFocusMode, setIsFocusMode] = useState(false);
+  
   // Visual Share State
   const [aspectRatio, setAspectRatio] = useState<AspectRatio>('auto');
-  const [cardTheme, setCardTheme] = useState<CardTheme>('light'); // Default to light to match reference image vibe
+  const [cardTheme, setCardTheme] = useState<CardTheme>('light'); 
   const [customExcerpt, setCustomExcerpt] = useState('');
   const [isSelectingText, setIsSelectingText] = useState(false);
   
@@ -172,44 +175,39 @@ export default function PostView() {
     }
   };
 
-  const handleDownload = () => {
-    if (!post) return;
-    const element = document.createElement("a");
-    const fileContent = `# ${post.title}\n\nAuthor: Bias Fajar Khaliq\nDate: ${format(new Date(post.created_at), 'yyyy-MM-dd')}\nLink: ${getShareUrl()}\n\n---\n\n${post.excerpt ? `> ${post.excerpt}\n\n` : ''}${post.content}`;
-    const file = new Blob([fileContent], {type: 'text/markdown'});
-    element.href = URL.createObjectURL(file);
-    element.download = `${post.title.replace(/[^a-z0-9]/gi, '_').toLowerCase()}.md`;
-    document.body.appendChild(element);
-    element.click();
-    document.body.removeChild(element);
-    toast("File downloaded successfully", "success");
+  const toggleVisibility = async () => {
+    if (!post || !id) return;
+    const newStatus = !post.is_public;
+    
+    try {
+        const { error } = await supabase.from('posts').update({ is_public: newStatus }).eq('id', id);
+        if (error) throw error;
+        
+        setPost({ ...post, is_public: newStatus });
+        toast(`Postingan sekarang ${newStatus ? 'Publik' : 'Pribadi'}`, "success");
+    } catch (error) {
+        toast("Gagal mengubah visibilitas", "error");
+    }
   };
 
-  // ROBUST IMAGE GENERATION: CLONE & CAPTURE
   const generateImageBlob = async (): Promise<Blob | null> => {
     if (!cardRef.current) return null;
-    
-    // 1. Clone the node
     const clone = cardRef.current.cloneNode(true) as HTMLElement;
-    
-    // 2. Style the clone to be fixed width and hidden
     clone.style.position = 'fixed';
     clone.style.top = '-9999px';
     clone.style.left = '-9999px';
-    clone.style.width = '600px'; // Force 600px width
+    clone.style.width = '600px'; 
     clone.style.height = 'auto';
     clone.style.zIndex = '-1';
     clone.style.transform = 'none';
     clone.style.borderRadius = '0';
 
-    // Append to body
     document.body.appendChild(clone);
 
     try {
-        // 3. Capture the clone
         const canvas = await html2canvas(clone, {
             scale: 2, 
-            backgroundColor: cardTheme === 'dark' ? '#18181B' : '#FFFFFF',
+            backgroundColor: cardTheme === 'dark' ? '#0A0A0A' : '#FAFAFA',
             useCORS: true,
             logging: false,
             allowTaint: true,
@@ -222,7 +220,6 @@ export default function PostView() {
         console.error("Capture failed:", err);
         return null;
     } finally {
-        // 4. Clean up
         document.body.removeChild(clone);
     }
   };
@@ -298,7 +295,6 @@ export default function PostView() {
     setShowVisualShare(true);
   };
 
-  // Helper to determine icon based on category
   const getCategoryIcon = (category?: string) => {
     switch(category) {
         case 'Penelitian': return Microscope;
@@ -312,138 +308,115 @@ export default function PostView() {
 
   if (!post) return (
     <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin w-8 h-8 border-t-2 border-primary rounded-full"></div>
+        <div className="animate-spin w-12 h-12 border-t-4 border-primary rounded-full"></div>
     </div>
   );
 
   return (
     <>
-      <motion.div className="fixed top-0 left-0 right-0 h-1 bg-primary origin-left z-[60] no-print" style={{ scaleX }} />
+      {/* Reading Progress Bar - Positioned below the navbar (top-20) */}
+      <motion.div className="fixed top-20 left-0 right-0 h-1 bg-primary origin-left z-[40] no-print" style={{ scaleX }} />
 
-      <div className="min-h-screen pt-24 px-6 max-w-5xl mx-auto pb-20">
-        <Link to="/repo" className="inline-flex items-center gap-2 text-muted-foreground hover:text-primary mb-8 transition-colors group text-sm font-medium no-print">
+      <div className="min-h-screen pt-28 px-5 md:px-8 max-w-6xl mx-auto pb-40 md:pb-32">
+        <Link to="/repo" className="inline-flex items-center gap-2 text-muted-foreground hover:text-primary mb-8 transition-colors group text-sm font-bold bg-secondary/50 px-5 py-2.5 rounded-full no-print">
           <ArrowLeft size={16} className="group-hover:-translate-x-1 transition-transform" /> {t('post.back')}
         </Link>
 
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
+        <div className={cn("grid grid-cols-1 gap-10 transition-all duration-500", isFocusMode ? "max-w-4xl mx-auto" : "lg:grid-cols-12")}>
             
             {/* Main Content */}
-            <article className="lg:col-span-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
-                <header className="mb-10">
-                    <div className="flex gap-2 mb-6 no-print">
-                        <span className="text-xs font-bold uppercase tracking-wider text-primary px-3 py-1 rounded-full bg-primary/10">
+            <article className={cn("transition-all duration-500 animate-in fade-in slide-in-from-bottom-4", isFocusMode ? "col-span-1" : "lg:col-span-8")}>
+                <header className="mb-12">
+                    <div className="flex flex-wrap gap-2 mb-6 no-print">
+                        <span className="text-xs font-bold uppercase tracking-wider text-primary px-4 py-1.5 rounded-full bg-primary/10 border border-primary/20">
                             {post.category || 'General'}
                         </span>
                         {post.subcategory && (
-                            <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground px-3 py-1 rounded-full bg-secondary">
+                            <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground px-4 py-1.5 rounded-full bg-secondary border border-border">
                                 {post.subcategory}
                             </span>
                         )}
                         {post.is_pinned && (
-                            <span className="text-xs font-bold uppercase tracking-wider text-primary px-3 py-1 rounded-full bg-primary/10 flex items-center gap-1">
+                            <span className="text-xs font-bold uppercase tracking-wider text-primary px-4 py-1.5 rounded-full bg-primary/10 border border-primary/20 flex items-center gap-1">
                                 <Pin size={12} className="fill-current" /> Pinned
                             </span>
                         )}
                     </div>
 
-                    <h1 className="text-3xl md:text-5xl font-bold text-foreground leading-tight mb-6">{post.title}</h1>
+                    <h1 className="text-4xl md:text-5xl lg:text-6xl font-serif font-bold text-foreground leading-[1.15] mb-8 relative tracking-tight">
+                        <span className="relative z-10">{post.title}</span>
+                        <div className="absolute -inset-4 bg-primary/5 blur-3xl -z-10 rounded-full opacity-50" />
+                    </h1>
                     
-                    <div className="flex items-center gap-4 text-sm text-muted-foreground border-b border-border pb-6">
-                        <span className="font-bold text-foreground">Bias Fajar Khaliq</span>
-                        <span className="w-1 h-1 rounded-full bg-muted-foreground/50"></span>
-                        <span>{format(new Date(post.created_at), 'MMM d, yyyy')}</span>
-                        <span className="w-1 h-1 rounded-full bg-muted-foreground/50"></span>
-                        <span className="flex items-center gap-1"><Clock size={14} /> {readingTime} {t('post.readTime')}</span>
+                    <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground border-b border-border pb-8">
+                        <div className="flex items-center gap-3 bg-secondary/50 px-4 py-2 rounded-full border border-border/50">
+                            <div className="w-6 h-6 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold text-xs">B</div>
+                            <span className="font-bold text-foreground">Bias Fajar Khaliq</span>
+                        </div>
+                        <span className="flex items-center gap-2 bg-secondary/50 px-4 py-2 rounded-full border border-border/50">
+                            <Clock size={14} /> {format(new Date(post.created_at), 'MMM d, yyyy')}
+                        </span>
+                        <span className="flex items-center gap-2 bg-secondary/50 px-4 py-2 rounded-full border border-border/50">
+                            <Book size={14} /> {readingTime} {t('post.readTime')}
+                        </span>
                     </div>
                 </header>
 
                 <div className="min-h-[300px] mb-16">
                     <MarkdownRenderer content={post.content} />
                 </div>
-
-                {/* Interaction Bar */}
-                <div className="flex flex-wrap items-center justify-between gap-4 py-6 border-t border-border no-print">
-                    <motion.button 
-                        whileTap={{ scale: 0.95 }}
-                        onClick={handleLike}
-                        className={cn(
-                            "flex items-center gap-2 px-4 py-2 rounded-full transition-all text-sm font-bold",
-                            liked ? "bg-red-50 text-red-500" : "bg-secondary hover:bg-secondary/80 text-muted-foreground hover:text-red-500"
-                        )}
-                    >
-                        <Heart size={18} className={cn(liked && "fill-current")} />
-                        {liked ? t('post.liked') : t('post.like')} {post.likes > 0 && <span className="opacity-70">({post.likes})</span>}
-                    </motion.button>
-
-                    <div className="flex gap-2 relative flex-wrap">
-                         {canEdit && (
-                            <Link to={`/editor/${post.id}`} className="p-2.5 bg-secondary rounded-full hover:bg-primary hover:text-primary-foreground transition-colors">
-                                <Edit size={18} />
-                            </Link>
-                        )}
-                        <button onClick={handleDownload} className="p-2.5 bg-secondary rounded-full hover:bg-foreground hover:text-background transition-colors" title={t('post.download')}>
-                            <Download size={18} />
-                        </button>
-                        <button onClick={() => window.print()} className="p-2.5 bg-secondary rounded-full hover:bg-foreground hover:text-background transition-colors" title="Print">
-                            <Printer size={18} />
-                        </button>
-                        <button onClick={() => setShowVisualShare(true)} className="p-2.5 bg-secondary rounded-full hover:bg-purple-600 hover:text-white transition-colors" title={t('post.visualShare')}>
-                            <ImageIcon size={18} />
-                        </button>
-                        
-                        <div className="relative">
-                            <button 
-                                onClick={handleNativeShare}
-                                className="px-4 py-2.5 bg-foreground text-background rounded-full hover:opacity-90 transition-colors flex items-center gap-2 text-sm font-bold"
-                            >
-                                <Share2 size={18} /> {t('post.share')}
-                            </button>
-
-                            <AnimatePresence>
-                                {showShareMenu && (
-                                    <motion.div 
-                                        initial={{ opacity: 0, y: 10, scale: 0.95 }}
-                                        animate={{ opacity: 1, y: 0, scale: 1 }}
-                                        exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                                        className="absolute bottom-full right-0 mb-2 w-48 bg-card border border-border rounded-xl shadow-xl p-2 z-50 origin-bottom-right"
-                                    >
-                                        <button onClick={() => shareToSocial('whatsapp')} className="w-full flex items-center gap-3 px-3 py-2.5 hover:bg-secondary rounded-lg text-sm text-foreground transition-colors text-left">
-                                            <MessageCircle size={16} className="text-green-500" /> WhatsApp
-                                        </button>
-                                        <button onClick={() => shareToSocial('twitter')} className="w-full flex items-center gap-3 px-3 py-2.5 hover:bg-secondary rounded-lg text-sm text-foreground transition-colors text-left">
-                                            <Twitter size={16} className="text-blue-400" /> X / Twitter
-                                        </button>
-                                        <button onClick={() => shareToSocial('linkedin')} className="w-full flex items-center gap-3 px-3 py-2.5 hover:bg-secondary rounded-lg text-sm text-foreground transition-colors text-left">
-                                            <Linkedin size={16} className="text-blue-700" /> LinkedIn
-                                        </button>
-                                        <div className="h-px bg-border my-1"></div>
-                                        <button onClick={copyToClipboard} className="w-full flex items-center gap-3 px-3 py-2.5 hover:bg-secondary rounded-lg text-sm text-foreground transition-colors text-left">
-                                            <LinkIcon size={16} /> {t('post.copyLink')}
-                                        </button>
-                                    </motion.div>
-                                )}
-                            </AnimatePresence>
-                        </div>
-                    </div>
-                </div>
             </article>
 
-            {/* Sidebar: Table of Contents & Related */}
-            <aside className="lg:col-span-4 space-y-8 no-print">
-                <div className="sticky top-24 space-y-8">
+            {/* Sidebar: Table of Contents & Admin Insights */}
+            <aside className={cn("space-y-8 no-print transition-all duration-500", isFocusMode ? "hidden opacity-0" : "lg:col-span-4 opacity-100")}>
+                <div className="sticky top-28 space-y-8">
+                    
+                    {/* Admin Insights Panel */}
+                    {canEdit && (
+                        <div className="bg-primary/5 border border-primary/20 rounded-[2rem] p-6 shadow-sm">
+                            <h3 className="text-sm font-bold text-primary uppercase tracking-wider mb-4 flex items-center gap-2">
+                                <ShieldCheck size={18} /> Admin Insights
+                            </h3>
+                            <div className="grid grid-cols-2 gap-4 mb-6">
+                                <div className="bg-background rounded-[1.5rem] p-4 text-center border border-border/50 shadow-sm">
+                                    <Eye size={20} className="mx-auto mb-2 text-muted-foreground" />
+                                    <p className="text-2xl font-bold text-foreground">{post.view_count}</p>
+                                    <p className="text-[10px] uppercase text-muted-foreground font-bold">Views</p>
+                                </div>
+                                <div className="bg-background rounded-[1.5rem] p-4 text-center border border-border/50 shadow-sm">
+                                    <Heart size={20} className="mx-auto mb-2 text-muted-foreground" />
+                                    <p className="text-2xl font-bold text-foreground">{post.likes}</p>
+                                    <p className="text-[10px] uppercase text-muted-foreground font-bold">Likes</p>
+                                </div>
+                            </div>
+                            <button
+                                onClick={toggleVisibility}
+                                className={cn(
+                                    "w-full py-3.5 rounded-full font-bold text-sm flex items-center justify-center gap-2 transition-all shadow-sm",
+                                    post.is_public
+                                        ? "bg-emerald-500/10 text-emerald-600 hover:bg-emerald-500/20 border border-emerald-500/20"
+                                        : "bg-orange-500/10 text-orange-600 hover:bg-orange-500/20 border border-orange-500/20"
+                                )}
+                            >
+                                {post.is_public ? <Globe size={16} /> : <Lock size={16} />}
+                                {post.is_public ? "Status: Publik" : "Status: Pribadi"}
+                            </button>
+                        </div>
+                    )}
+
                     {/* Table of Contents */}
-                    <div className="bg-card border border-border rounded-2xl p-6 shadow-sm">
+                    <div className="bg-card border border-border rounded-[2rem] p-6 shadow-sm">
                         <h3 className="text-sm font-bold text-foreground uppercase tracking-wider mb-4">{t('post.onThisPage')}</h3>
                         <TableOfContents content={post.content} />
                     </div>
 
                     {/* Related Posts */}
                     {relatedPosts.length > 0 && (
-                        <div>
+                        <div className="bg-card border border-border rounded-[2rem] p-6 shadow-sm">
                             <h3 className="text-sm font-bold text-foreground uppercase tracking-wider mb-4">{t('post.related')}</h3>
                             <div className="space-y-3">
                                 {relatedPosts.map(related => (
-                                    <Link key={related.id} to={`/post/${related.id}`} className="block p-4 rounded-xl bg-secondary/30 hover:bg-secondary border border-transparent hover:border-border transition-all group">
+                                    <Link key={related.id} to={`/post/${related.id}`} className="block p-4 rounded-[1.5rem] bg-secondary/30 hover:bg-secondary border border-transparent hover:border-border transition-all group">
                                         <h4 className="font-bold text-foreground text-sm group-hover:text-primary transition-colors line-clamp-2">{related.title}</h4>
                                         <p className="text-xs text-muted-foreground mt-2">{format(new Date(related.created_at), 'MMM d')}</p>
                                     </Link>
@@ -455,18 +428,109 @@ export default function PostView() {
             </aside>
         </div>
 
+        {/* Floating Action Bar (Material 3 Pill) */}
+        <motion.div 
+            initial={{ y: 100, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            className="fixed bottom-6 md:bottom-8 left-1/2 -translate-x-1/2 z-[80] flex items-center gap-1.5 md:gap-2 p-2 bg-card/90 backdrop-blur-xl border border-border/50 rounded-full shadow-[0_8px_32px_-8px_rgba(0,0,0,0.2)] no-print w-[90%] max-w-fit justify-center"
+        >
+            <button 
+                onClick={handleLike} 
+                className={cn(
+                    "flex items-center gap-2 px-4 md:px-5 py-3 rounded-full transition-all text-sm font-bold",
+                    liked ? "bg-red-500/10 text-red-500" : "hover:bg-secondary text-muted-foreground hover:text-red-500"
+                )}
+            >
+                <Heart size={20} className={cn(liked && "fill-current")} />
+                <span>{post.likes}</span>
+            </button>
+            
+            <div className="w-px h-8 bg-border mx-1" />
+            
+            <button 
+                onClick={() => setShowShareMenu(!showShareMenu)} 
+                className={cn(
+                    "p-3 rounded-full transition-colors",
+                    showShareMenu ? "bg-primary text-primary-foreground" : "hover:bg-secondary text-muted-foreground"
+                )}
+                title={t('post.share')}
+            >
+                <Share2 size={20} />
+            </button>
+
+            <button 
+                onClick={() => setIsFocusMode(!isFocusMode)} 
+                className={cn(
+                    "p-3 rounded-full transition-colors", 
+                    isFocusMode ? "bg-primary text-primary-foreground shadow-lg shadow-primary/20" : "hover:bg-secondary text-muted-foreground"
+                )}
+                title="Mode Fokus"
+            >
+                {isFocusMode ? <Minimize2 size={20} /> : <Maximize2 size={20} />}
+            </button>
+
+            {canEdit && (
+                <>
+                    <div className="w-px h-8 bg-border mx-1" />
+                    <Link 
+                        to={`/editor/${post.id}`} 
+                        className="p-3 rounded-full hover:bg-secondary transition-colors text-muted-foreground"
+                        title="Edit Postingan"
+                    >
+                        <Edit3 size={20} />
+                    </Link>
+                </>
+            )}
+        </motion.div>
+
+        {/* Share Menu Dropdown - FIXED POSITIONING TO CENTER OF SCREEN */}
+        <AnimatePresence>
+            {showShareMenu && (
+                <>
+                    {/* Invisible backdrop to close menu when clicking outside */}
+                    <div className="fixed inset-0 z-[85]" onClick={() => setShowShareMenu(false)} />
+                    
+                    <motion.div 
+                        initial={{ opacity: 0, y: 20, scale: 0.95 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: 20, scale: 0.95 }}
+                        // Fixed to the bottom center of the screen, just above the FAB
+                        className="fixed bottom-28 left-1/2 -translate-x-1/2 w-64 max-w-[90vw] bg-card border border-border rounded-[1.5rem] shadow-2xl p-2 z-[90] origin-bottom"
+                    >
+                        <button onClick={() => setShowVisualShare(true)} className="w-full flex items-center gap-3 px-4 py-3 hover:bg-secondary rounded-xl text-sm font-bold text-primary transition-colors text-left">
+                            <ImageIcon size={18} /> {t('post.visualShare')}
+                        </button>
+                        <div className="h-px bg-border my-1"></div>
+                        <button onClick={() => shareToSocial('whatsapp')} className="w-full flex items-center gap-3 px-4 py-3 hover:bg-secondary rounded-xl text-sm text-foreground transition-colors text-left">
+                            <MessageCircle size={18} className="text-green-500" /> WhatsApp
+                        </button>
+                        <button onClick={() => shareToSocial('twitter')} className="w-full flex items-center gap-3 px-4 py-3 hover:bg-secondary rounded-xl text-sm text-foreground transition-colors text-left">
+                            <Twitter size={18} className="text-blue-400" /> X / Twitter
+                        </button>
+                        <button onClick={() => shareToSocial('linkedin')} className="w-full flex items-center gap-3 px-4 py-3 hover:bg-secondary rounded-xl text-sm text-foreground transition-colors text-left">
+                            <Linkedin size={18} className="text-blue-700" /> LinkedIn
+                        </button>
+                        <div className="h-px bg-border my-1"></div>
+                        <button onClick={copyToClipboard} className="w-full flex items-center gap-3 px-4 py-3 hover:bg-secondary rounded-xl text-sm text-foreground transition-colors text-left">
+                            <LinkIcon size={18} /> {t('post.copyLink')}
+                        </button>
+                    </motion.div>
+                </>
+            )}
+        </AnimatePresence>
+
         {/* Selection Mode Floating Bar */}
         <AnimatePresence>
             {isSelectingText && (
                 <motion.div
-                    initial={{ y: 100, opacity: 0 }}
+                    initial={{ y: -100, opacity: 0 }}
                     animate={{ y: 0, opacity: 1 }}
-                    exit={{ y: 100, opacity: 0 }}
-                    className="fixed bottom-8 left-0 right-0 z-[100] flex justify-center px-4"
+                    exit={{ y: -100, opacity: 0 }}
+                    className="fixed top-24 left-0 right-0 z-[100] flex justify-center px-4"
                 >
                     <div className="bg-foreground text-background rounded-full shadow-2xl px-6 py-4 flex items-center gap-6 max-w-md w-full justify-between">
                         <div className="flex items-center gap-3">
-                            <TextCursorInput size={20} className="animate-pulse" />
+                            <TextCursorInput size={20} className="animate-pulse text-primary" />
                             <span className="text-sm font-bold">{t('post.selectionInstruction')}</span>
                         </div>
                         <div className="flex items-center gap-2">
@@ -479,7 +543,7 @@ export default function PostView() {
                             </button>
                             <button 
                                 onClick={captureSelection}
-                                className="px-4 py-2 bg-background text-foreground rounded-full text-xs font-bold hover:scale-105 transition-transform"
+                                className="px-4 py-2 bg-primary text-primary-foreground rounded-full text-xs font-bold hover:scale-105 transition-transform"
                             >
                                 {t('post.captureSelection')}
                             </button>
@@ -496,62 +560,62 @@ export default function PostView() {
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
-                    className="fixed inset-0 z-[100] bg-background/95 backdrop-blur-md flex items-center justify-center p-4 overflow-y-auto"
+                    className="fixed inset-0 z-[110] bg-background/95 backdrop-blur-md flex items-center justify-center p-4 overflow-y-auto"
                 >
-                    <div className="relative w-full max-w-2xl flex flex-col items-center my-auto">
+                    <div className="relative w-full max-w-2xl flex flex-col items-center my-auto py-8">
                         {/* Controls */}
-                        <div className="w-full bg-card border border-border rounded-2xl p-5 mb-6 shadow-lg space-y-5">
+                        <div className="w-full bg-card border border-border rounded-[2.5rem] p-6 mb-6 shadow-xl space-y-6">
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 {/* Size Selector */}
-                                <div className="space-y-2">
+                                <div className="space-y-3">
                                     <span className="text-xs font-bold uppercase text-muted-foreground flex items-center gap-2">
                                         <Maximize size={14} /> {t('post.cardSize')}
                                     </span>
-                                    <div className="grid grid-cols-4 gap-1 bg-secondary rounded-lg p-1">
-                                        <button onClick={() => setAspectRatio('auto')} className={cn("py-2 rounded-md transition-all flex justify-center", aspectRatio === 'auto' ? "bg-background shadow-sm text-primary" : "text-muted-foreground")} title={t('post.sizes.auto')}>
-                                            <Layout size={16} />
+                                    <div className="grid grid-cols-4 gap-2 bg-secondary/50 rounded-3xl p-2">
+                                        <button onClick={() => setAspectRatio('auto')} className={cn("py-3 rounded-2xl transition-all flex justify-center", aspectRatio === 'auto' ? "bg-background shadow-sm text-primary" : "text-muted-foreground hover:text-foreground")} title={t('post.sizes.auto')}>
+                                            <Layout size={18} />
                                         </button>
-                                        <button onClick={() => setAspectRatio('portrait')} className={cn("py-2 rounded-md transition-all flex justify-center", aspectRatio === 'portrait' ? "bg-background shadow-sm text-primary" : "text-muted-foreground")} title={t('post.sizes.portrait')}>
-                                            <Smartphone size={16} />
+                                        <button onClick={() => setAspectRatio('portrait')} className={cn("py-3 rounded-2xl transition-all flex justify-center", aspectRatio === 'portrait' ? "bg-background shadow-sm text-primary" : "text-muted-foreground hover:text-foreground")} title={t('post.sizes.portrait')}>
+                                            <Smartphone size={18} />
                                         </button>
-                                        <button onClick={() => setAspectRatio('square')} className={cn("py-2 rounded-md transition-all flex justify-center", aspectRatio === 'square' ? "bg-background shadow-sm text-primary" : "text-muted-foreground")} title={t('post.sizes.square')}>
-                                            <Square size={16} />
+                                        <button onClick={() => setAspectRatio('square')} className={cn("py-3 rounded-2xl transition-all flex justify-center", aspectRatio === 'square' ? "bg-background shadow-sm text-primary" : "text-muted-foreground hover:text-foreground")} title={t('post.sizes.square')}>
+                                            <Square size={18} />
                                         </button>
-                                        <button onClick={() => setAspectRatio('story')} className={cn("py-2 rounded-md transition-all flex justify-center", aspectRatio === 'story' ? "bg-background shadow-sm text-primary" : "text-muted-foreground")} title={t('post.sizes.story')}>
-                                            <Smartphone size={16} className="scale-y-110" />
+                                        <button onClick={() => setAspectRatio('story')} className={cn("py-3 rounded-2xl transition-all flex justify-center", aspectRatio === 'story' ? "bg-background shadow-sm text-primary" : "text-muted-foreground hover:text-foreground")} title={t('post.sizes.story')}>
+                                            <Smartphone size={18} className="scale-y-110" />
                                         </button>
                                     </div>
                                 </div>
 
                                 {/* Theme & Text */}
                                 <div className="space-y-4">
-                                    <div className="space-y-2">
+                                    <div className="space-y-3">
                                         <span className="text-xs font-bold uppercase text-muted-foreground flex items-center gap-2">
                                             <Sun size={14} /> {t('post.cardTheme')}
                                         </span>
-                                        <div className="flex bg-secondary rounded-lg p-1">
+                                        <div className="flex bg-secondary/50 rounded-3xl p-2 gap-2">
                                             <button 
                                                 onClick={() => setCardTheme('dark')}
-                                                className={cn("flex-1 py-1.5 rounded-md text-xs font-bold transition-all flex items-center justify-center gap-2", cardTheme === 'dark' ? "bg-background shadow-sm text-primary" : "text-muted-foreground")}
+                                                className={cn("flex-1 py-2.5 rounded-2xl text-sm font-bold transition-all flex items-center justify-center gap-2", cardTheme === 'dark' ? "bg-background shadow-sm text-primary" : "text-muted-foreground hover:text-foreground")}
                                             >
-                                                <Moon size={12} /> Dark
+                                                <Moon size={14} /> Dark
                                             </button>
                                             <button 
                                                 onClick={() => setCardTheme('light')}
-                                                className={cn("flex-1 py-1.5 rounded-md text-xs font-bold transition-all flex items-center justify-center gap-2", cardTheme === 'light' ? "bg-background shadow-sm text-primary" : "text-muted-foreground")}
+                                                className={cn("flex-1 py-2.5 rounded-2xl text-sm font-bold transition-all flex items-center justify-center gap-2", cardTheme === 'light' ? "bg-background shadow-sm text-primary" : "text-muted-foreground hover:text-foreground")}
                                             >
-                                                <Sun size={12} /> Light
+                                                <Sun size={14} /> Light
                                             </button>
                                         </div>
                                     </div>
 
-                                    <div className="space-y-2">
+                                    <div className="space-y-3">
                                         <div className="flex justify-between items-center">
                                             <span className="text-xs font-bold uppercase text-muted-foreground">{t('post.customizeText')}</span>
                                             <div className="flex items-center gap-3">
                                                 <button 
                                                     onClick={startSelectionMode}
-                                                    className="text-[10px] font-bold text-primary flex items-center gap-1 hover:underline bg-primary/10 px-2 py-1 rounded-md"
+                                                    className="text-[10px] font-bold text-primary flex items-center gap-1 hover:underline bg-primary/10 px-3 py-1.5 rounded-full"
                                                 >
                                                     <MousePointerClick size={12} /> {t('post.selectFromPage')}
                                                 </button>
@@ -566,7 +630,7 @@ export default function PostView() {
                                         <textarea 
                                             value={customExcerpt}
                                             onChange={(e) => setCustomExcerpt(e.target.value)}
-                                            className="w-full bg-secondary/50 border border-transparent rounded-lg p-3 text-sm focus:ring-1 focus:ring-primary/20 focus:border-primary outline-none transition-all resize-none h-24"
+                                            className="w-full bg-secondary/50 border border-transparent rounded-[1.5rem] p-4 text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all resize-none h-24"
                                             placeholder="Enter text to display on card..."
                                         />
                                     </div>
@@ -574,8 +638,8 @@ export default function PostView() {
                             </div>
                         </div>
 
-                        {/* REBUILT SHARE CARD - Adapted to Reference Image */}
-                        <div className="w-full flex justify-center mb-6">
+                        {/* REBUILT SHARE CARD */}
+                        <div className="w-full flex justify-center mb-8">
                             <div 
                                 ref={cardRef}
                                 className={cn(
@@ -584,38 +648,34 @@ export default function PostView() {
                                     aspectRatio === 'portrait' ? "aspect-[4/5]" : 
                                     aspectRatio === 'story' ? "aspect-[9/16]" : 
                                     "min-h-[500px] h-auto",
-                                    cardTheme === 'dark' ? "bg-[#18181B] text-white" : "bg-white text-zinc-900"
+                                    cardTheme === 'dark' ? "bg-[#0F0F0F] text-white" : "bg-[#FAFAFA] text-zinc-900"
                                 )}
                                 style={{ 
-                                    borderRadius: '24px',
-                                    border: cardTheme === 'dark' ? '1px solid #27272A' : '1px solid #E4E4E7',
+                                    borderRadius: '32px',
+                                    border: cardTheme === 'dark' ? '1px solid #222' : '1px solid #EAEAEA',
                                     boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.15)'
                                 }}
                             >
-                                {/* Background Elements */}
-                                <div className={cn("absolute inset-0", cardTheme === 'dark' ? "bg-[#18181B]" : "bg-[#FAFAFA]")}></div>
+                                <div className={cn("absolute inset-0", cardTheme === 'dark' ? "bg-[#0F0F0F]" : "bg-[#FAFAFA]")}></div>
                                 
-                                {/* Top Right Curve Decoration */}
                                 <div className={cn(
                                     "absolute -top-20 -right-20 w-64 h-64 rounded-full opacity-50",
-                                    cardTheme === 'dark' ? "bg-white/5" : "bg-black/5"
+                                    cardTheme === 'dark' ? "bg-[#D4AF37]/10" : "bg-[#D4AF37]/5"
                                 )}></div>
                                 
-                                {/* Large Background Icon - Subtle Watermark */}
                                 <div className="absolute top-1/2 right-0 -translate-y-1/2 translate-x-1/4 opacity-[0.03] pointer-events-none">
                                     <BackgroundIcon size={400} className={cn("rotate-[-10deg]", cardTheme === 'dark' ? "text-white" : "text-black")} />
                                 </div>
                                 
-                                {/* Header: Logo & Brand */}
                                 <div className="relative z-10 flex items-center gap-4 mb-12">
                                     <div className={cn(
-                                        "w-10 h-10 rounded-full border flex items-center justify-center",
-                                        cardTheme === 'dark' ? "border-white/20 bg-white/5 text-white" : "border-black/10 bg-white text-black"
+                                        "w-12 h-12 rounded-full border flex items-center justify-center",
+                                        cardTheme === 'dark' ? "border-[#D4AF37]/30 bg-[#D4AF37]/10 text-[#D4AF37]" : "border-[#D4AF37]/20 bg-[#D4AF37]/10 text-[#B8860B]"
                                     )}>
-                                        <Feather size={18} />
+                                        <Feather size={20} />
                                     </div>
                                     <div className="flex flex-col">
-                                        <span className={cn("text-xs font-bold tracking-widest uppercase", cardTheme === 'dark' ? "text-white" : "text-zinc-900")}>
+                                        <span className={cn("text-sm font-bold tracking-widest uppercase", cardTheme === 'dark' ? "text-white" : "text-zinc-900")}>
                                             Khaliq Repository
                                         </span>
                                         <span className={cn("text-[10px] tracking-wider uppercase opacity-60", cardTheme === 'dark' ? "text-white" : "text-zinc-900")}>
@@ -624,7 +684,6 @@ export default function PostView() {
                                     </div>
                                 </div>
 
-                                {/* Main Content */}
                                 <div className="relative z-10 flex-grow flex flex-col justify-center mb-8">
                                     <h2 className={cn(
                                         "text-4xl md:text-5xl font-bold tracking-tight mb-8 font-sans leading-[1.1]", 
@@ -633,44 +692,40 @@ export default function PostView() {
                                         {post.title}
                                     </h2>
                                     
-                                    {/* Quote / Excerpt with Bar */}
                                     <div className={cn(
                                         "pl-6 border-l-4",
-                                        cardTheme === 'dark' ? "border-white/20" : "border-zinc-200"
+                                        cardTheme === 'dark' ? "border-[#D4AF37]/50" : "border-[#B8860B]/50"
                                     )}>
                                         <p className={cn(
-                                            "text-lg md:text-xl leading-relaxed italic", 
-                                            cardTheme === 'dark' ? "text-gray-300" : "text-zinc-600"
+                                            "text-xl md:text-2xl leading-relaxed italic font-serif", 
+                                            cardTheme === 'dark' ? "text-zinc-300" : "text-zinc-600"
                                         )}>
                                             "{customExcerpt}"
                                         </p>
                                     </div>
                                 </div>
 
-                                {/* Footer */}
                                 <div className={cn(
                                     "relative z-10 pt-8 border-t flex items-end justify-between w-full", 
                                     cardTheme === 'dark' ? "border-white/10" : "border-black/5"
                                 )}>
-                                    {/* Left: Website URL (Replaces Author Info) */}
-                                    <div className="flex items-center gap-2">
+                                    <div className="flex items-center gap-3">
                                          <div className={cn(
-                                            "w-8 h-8 rounded-full flex items-center justify-center",
-                                            cardTheme === 'dark' ? "bg-white text-black" : "bg-black text-white"
+                                            "w-10 h-10 rounded-full flex items-center justify-center",
+                                            cardTheme === 'dark' ? "bg-white text-zinc-900" : "bg-zinc-900 text-white"
                                          )}>
-                                            <Globe size={14} />
+                                            <Globe size={16} />
                                          </div>
-                                         <span className={cn("text-xs font-bold tracking-wide", cardTheme === 'dark' ? "text-white" : "text-zinc-900")}>
+                                         <span className={cn("text-sm font-bold tracking-wide", cardTheme === 'dark' ? "text-white" : "text-zinc-900")}>
                                             khaliq-repos.pages.dev
                                          </span>
                                     </div>
 
-                                    {/* Right: Date & Meta */}
                                     <div className="text-right">
-                                        <p className={cn("text-[10px] uppercase tracking-wider opacity-60 mb-1", cardTheme === 'dark' ? "text-white" : "text-zinc-900")}>
+                                        <p className={cn("text-xs uppercase tracking-wider opacity-60 mb-1", cardTheme === 'dark' ? "text-white" : "text-zinc-900")}>
                                             {format(new Date(post.created_at), 'MMMM d, yyyy')}
                                         </p>
-                                        <p className={cn("text-xs font-bold", cardTheme === 'dark' ? "text-white" : "text-zinc-900")}>
+                                        <p className={cn("text-sm font-bold", cardTheme === 'dark' ? "text-[#D4AF37]" : "text-[#B8860B]")}>
                                             {post.category || 'Bahasan'} • {readingTime} min read
                                         </p>
                                     </div>
@@ -720,11 +775,11 @@ function TableOfContents({ content }: { content: string }) {
     const headings = content.match(/^#{1,3} (.*$)/gim);
     
     if (!headings || headings.length === 0) {
-        return <p className="text-sm text-muted-foreground italic">No sections found.</p>;
+        return <p className="text-sm text-muted-foreground italic">Tidak ada daftar isi.</p>;
     }
 
     return (
-        <nav className="flex flex-col gap-2">
+        <nav className="flex flex-col gap-3">
             {headings.map((heading, index) => {
                 const level = heading.match(/^#+/)?.[0].length || 1;
                 const text = heading.replace(/^#+ /, '');
@@ -744,12 +799,14 @@ function TableOfContents({ content }: { content: string }) {
                             }
                         }}
                         className={cn(
-                            "text-sm transition-colors hover:text-primary line-clamp-1",
+                            "text-sm transition-colors hover:text-primary line-clamp-1 flex items-center gap-2",
                             level === 1 ? "font-bold text-foreground" : 
-                            level === 2 ? "pl-3 text-muted-foreground" : 
-                            "pl-6 text-muted-foreground/80 text-xs"
+                            level === 2 ? "pl-4 text-muted-foreground" : 
+                            "pl-8 text-muted-foreground/80 text-xs"
                         )}
                     >
+                        {level === 1 && <div className="w-1.5 h-1.5 rounded-full bg-primary/50" />}
+                        {level === 2 && <div className="w-1 h-1 rounded-full bg-border" />}
                         {text}
                     </a>
                 );

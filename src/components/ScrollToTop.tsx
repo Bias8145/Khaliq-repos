@@ -29,11 +29,12 @@ export default function ScrollToTop() {
     <AnimatePresence>
       {isVisible && (
         <motion.button
-          initial={{ opacity: 0, scale: 0.5 }}
-          animate={{ opacity: 1, scale: 1 }}
-          exit={{ opacity: 0, scale: 0.5 }}
+          initial={{ opacity: 0, scale: 0.5, y: 20 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          exit={{ opacity: 0, scale: 0.5, y: 20 }}
           onClick={scrollToTop}
-          className="fixed bottom-6 right-6 z-40 p-3 rounded-full bg-primary text-primary-foreground shadow-lg shadow-primary/20 hover:bg-primary/90 transition-colors group"
+          // Adjusted positioning: Higher on mobile to avoid overlapping with centered FABs
+          className="fixed bottom-24 md:bottom-8 right-5 md:right-8 z-40 p-3.5 rounded-full bg-primary text-primary-foreground shadow-xl shadow-primary/20 hover:bg-primary/90 hover:scale-105 transition-all group"
           aria-label="Scroll to top"
         >
           <ArrowUp size={20} className="group-hover:-translate-y-1 transition-transform" />

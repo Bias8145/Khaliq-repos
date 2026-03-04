@@ -18,10 +18,11 @@ export type Post = {
   title: string;
   content: string;
   excerpt?: string;
+  summary?: string; // Used for Pinned Notes
   created_at: string;
   updated_at: string;
   is_public: boolean;
-  is_pinned?: boolean; // Added is_pinned
+  is_pinned?: boolean;
   status?: 'published' | 'draft';
   view_count: number;
   likes: number;

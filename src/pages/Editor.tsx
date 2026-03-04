@@ -7,6 +7,7 @@ import { useToast } from '../components/ui/Toast';
 import { MarkdownRenderer } from '../components/MarkdownRenderer';
 import { useLanguage } from '../lib/language';
 import { ConfirmDialog } from '../components/ui/ConfirmDialog';
+import { motion, AnimatePresence } from 'framer-motion';
 
 // Predefined lists for suggestions
 const CATEGORY_SUGGESTIONS = ["Catatan", "Penelitian", "Bahasan", "Jurnal", "Proyek"];
@@ -24,6 +25,7 @@ export default function Editor() {
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
   const [excerpt, setExcerpt] = useState('');
+  const [summary, setSummary] = useState(''); // Used for Pinned Note
   const [category, setCategory] = useState('Catatan');
   const [subcategory, setSubcategory] = useState('');
   const [status, setStatus] = useState<'published' | 'draft'>('published');
@@ -56,6 +58,7 @@ export default function Editor() {
           setTitle(data.title);
           setContent(data.content);
           setExcerpt(data.excerpt || '');
+          setSummary(data.summary || '');
           setStatus(data.status || (data.is_public ? 'published' : 'draft'));
           setIsPublic(data.is_public);
           setIsPinned(data.is_pinned || false);
@@ -91,8 +94,9 @@ export default function Editor() {
       title,
       content,
       excerpt,
+      summary: isPinned ? summary : null, // Only save summary if pinned
       status: finalStatus,
-      is_public: isPublic, // Explicit visibility control
+      is_public: isPublic, 
       is_pinned: isPinned,
       category,
       subcategory,
@@ -177,7 +181,7 @@ export default function Editor() {
   };
 
   return (
-    <div className="min-h-screen pt-24 px-5 md:px-8 max-w-5xl mx-auto pb-32">
+    <div className="min-h-screen pt-28 px-5 md:px-8 max-w-5xl mx-auto pb-32">
       
       {/* Delete Confirmation */}
       <ConfirmDialog 
@@ -203,7 +207,7 @@ export default function Editor() {
       />
 
       {/* Top Bar */}
-      <div className="flex justify-between items-center mb-8 sticky top-20 z-20 bg-background/80 backdrop-blur-md py-4 border-b border-border/50">
+      <div className="flex justify-between items-center mb-8 sticky top-[5.5rem] z-20 bg-background/80 backdrop-blur-md py-4 border-b border-border/50">
         <Link to="/repo" className="text-muted-foreground hover:text-foreground flex items-center gap-2 text-xs font-bold uppercase tracking-wider transition-colors group">
           <ArrowLeft size={14} className="group-hover:-translate-x-1 transition-transform" /> {t('editor.back')}
         </Link>
@@ -246,7 +250,7 @@ export default function Editor() {
                 className="w-full bg-transparent border-none text-3xl md:text-5xl font-serif font-bold text-foreground placeholder:text-muted-foreground/30 focus:outline-none focus:ring-0 px-0 leading-tight"
             />
 
-            <div className="border border-border rounded-xl bg-card overflow-hidden shadow-sm focus-within:ring-1 focus-within:ring-primary/50 transition-all min-h-[500px]">
+            <div className="border border-border rounded-[2rem] bg-card overflow-hidden shadow-sm focus-within:ring-1 focus-within:ring-primary/50 transition-all min-h-[500px]">
                 {/* Toolbar - Only show in Edit mode */}
                 {!isPreview && (
                     <div className="flex items-center gap-1 p-2 border-b border-border bg-secondary/30 overflow-x-auto sticky top-0 z-10 backdrop-blur-sm">
@@ -271,7 +275,7 @@ export default function Editor() {
                         value={content}
                         onChange={(e) => setContent(e.target.value)}
                         placeholder={t('editor.contentPlaceholder')}
-                        className="w-full h-full min-h-[500px] p-6 bg-transparent border-none outline-none resize-y font-serif text-lg leading-relaxed text-foreground/90"
+                        className="w-full h-full min-h-[500px] p-6 md:p-8 bg-transparent border-none outline-none resize-y font-serif text-lg leading-relaxed text-foreground/90"
                     />
                 )}
             </div>
@@ -279,12 +283,12 @@ export default function Editor() {
 
         {/* Sidebar Settings */}
         <div className="space-y-6">
-            <div className="bg-card border border-border rounded-xl p-6 shadow-sm space-y-6 sticky top-32">
+            <div className="bg-card border border-border rounded-[2rem] p-6 shadow-sm space-y-6 sticky top-36">
                 <h3 className="font-bold text-foreground text-sm flex items-center gap-2 border-b border-border pb-4">
                     <Layout size={16} className="text-primary" /> {t('editor.settings')}
                 </h3>
 
-                {/* Status & Visibility Control - ENHANCED */}
+                {/* Status & Visibility Control */}
                 <div className="space-y-4">
                     <div className="space-y-2">
                         <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider flex items-center gap-2">
@@ -294,7 +298,7 @@ export default function Editor() {
                             <button
                                 onClick={() => setIsPublic(true)}
                                 className={cn(
-                                    "py-3 px-3 rounded-lg text-xs font-bold border transition-all flex flex-col items-center justify-center gap-1",
+                                    "py-3 px-3 rounded-[1rem] text-xs font-bold border transition-all flex flex-col items-center justify-center gap-1",
                                     isPublic 
                                         ? "bg-primary/10 border-primary text-primary shadow-sm" 
                                         : "bg-transparent border-border text-muted-foreground hover:bg-secondary"
@@ -305,7 +309,7 @@ export default function Editor() {
                             <button
                                 onClick={() => setIsPublic(false)}
                                 className={cn(
-                                    "py-3 px-3 rounded-lg text-xs font-bold border transition-all flex flex-col items-center justify-center gap-1",
+                                    "py-3 px-3 rounded-[1rem] text-xs font-bold border transition-all flex flex-col items-center justify-center gap-1",
                                     !isPublic 
                                         ? "bg-foreground/5 border-foreground text-foreground shadow-sm" 
                                         : "bg-transparent border-border text-muted-foreground hover:bg-secondary"
@@ -321,8 +325,8 @@ export default function Editor() {
                         </p>
                     </div>
 
-                    {/* Pin Toggle */}
-                    <div className="space-y-2 pt-2 border-t border-border">
+                    {/* Pin Toggle & Note */}
+                    <div className="space-y-4 pt-4 border-t border-border">
                          <div className="flex items-center justify-between">
                             <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider flex items-center gap-2">
                                 <Pin size={12} /> {t('editor.pinned')}
@@ -343,10 +347,31 @@ export default function Editor() {
                          <p className="text-[10px] text-muted-foreground leading-tight">
                             {t('editor.pinnedDesc')}
                          </p>
+
+                         {/* Pinned Note Input (Animated) */}
+                         <AnimatePresence>
+                             {isPinned && (
+                                 <motion.div
+                                    initial={{ opacity: 0, height: 0 }}
+                                    animate={{ opacity: 1, height: 'auto' }}
+                                    exit={{ opacity: 0, height: 0 }}
+                                    className="space-y-2 overflow-hidden"
+                                 >
+                                     <label className="text-[10px] font-bold text-primary uppercase tracking-wider">{t('editor.pinNote')}</label>
+                                     <textarea
+                                        value={summary}
+                                        onChange={(e) => setSummary(e.target.value)}
+                                        placeholder={t('editor.pinNoteDesc')}
+                                        rows={2}
+                                        className="w-full bg-primary/5 border border-primary/20 rounded-[1rem] p-3 text-sm focus:ring-1 focus:ring-primary/50 outline-none transition-all resize-none"
+                                     />
+                                 </motion.div>
+                             )}
+                         </AnimatePresence>
                     </div>
                 </div>
 
-                {/* Classification - IMPROVED WITH VISIBLE CHIPS */}
+                {/* Classification */}
                 <div className="space-y-4 pt-4 border-t border-border">
                     <div className="space-y-2">
                         <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">{t('editor.category')}</label>
@@ -355,14 +380,13 @@ export default function Editor() {
                                 list="category-suggestions"
                                 value={category}
                                 onChange={(e) => setCategory(e.target.value)}
-                                className="w-full bg-secondary/50 border border-transparent rounded-lg p-3 text-sm font-medium focus:ring-1 focus:ring-primary/20 focus:border-primary outline-none transition-all"
+                                className="w-full bg-secondary/50 border border-transparent rounded-[1rem] p-3 text-sm font-medium focus:ring-1 focus:ring-primary/20 focus:border-primary outline-none transition-all"
                                 placeholder={t('editor.selectOrType')}
                             />
                             <datalist id="category-suggestions">
                                 {CATEGORY_SUGGESTIONS.map(cat => <option key={cat} value={cat} />)}
                             </datalist>
                         </div>
-                        {/* Visible Chips for Quick Select */}
                         <div className="flex flex-wrap gap-2 mt-2">
                             {CATEGORY_SUGGESTIONS.map(cat => (
                                 <button
@@ -388,14 +412,13 @@ export default function Editor() {
                                 list="subcategory-suggestions"
                                 value={subcategory}
                                 onChange={(e) => setSubcategory(e.target.value)}
-                                className="w-full bg-secondary/50 border border-transparent rounded-lg p-3 text-sm font-medium focus:ring-1 focus:ring-primary/20 focus:border-primary outline-none transition-all"
+                                className="w-full bg-secondary/50 border border-transparent rounded-[1rem] p-3 text-sm font-medium focus:ring-1 focus:ring-primary/20 focus:border-primary outline-none transition-all"
                                 placeholder={t('editor.selectOrType')}
                             />
                             <datalist id="subcategory-suggestions">
                                 {SUBCATEGORY_SUGGESTIONS.map(sub => <option key={sub} value={sub} />)}
                             </datalist>
                         </div>
-                         {/* Visible Chips for Quick Select */}
                          <div className="flex flex-wrap gap-2 mt-2">
                             {SUBCATEGORY_SUGGESTIONS.map(sub => (
                                 <button
@@ -423,7 +446,7 @@ export default function Editor() {
                         onChange={(e) => setExcerpt(e.target.value)}
                         placeholder={t('editor.excerptPlaceholder')}
                         rows={4}
-                        className="w-full bg-secondary/50 border border-transparent rounded-lg p-3 text-sm focus:ring-1 focus:ring-primary/20 focus:border-primary outline-none transition-all resize-none"
+                        className="w-full bg-secondary/50 border border-transparent rounded-[1rem] p-3 text-sm focus:ring-1 focus:ring-primary/20 focus:border-primary outline-none transition-all resize-none"
                     />
                 </div>
 
@@ -432,7 +455,7 @@ export default function Editor() {
                     <div className="pt-6 mt-6 border-t border-border">
                         <button 
                             onClick={() => setShowDeleteDialog(true)}
-                            className="w-full py-3 rounded-lg border border-destructive/20 text-destructive hover:bg-destructive/5 font-bold text-xs flex items-center justify-center gap-2 transition-colors"
+                            className="w-full py-3 rounded-[1rem] border border-destructive/20 text-destructive hover:bg-destructive/5 font-bold text-xs flex items-center justify-center gap-2 transition-colors"
                         >
                             <Trash2 size={14} /> {t('editor.delete')}
                         </button>
