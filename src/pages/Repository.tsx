@@ -2,7 +2,7 @@ import React, { useEffect, useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { supabase, type Post } from '../lib/supabase';
 import { format } from 'date-fns';
-import { Eye, EyeOff, Plus, Search, ChevronRight, Filter, Layers, Trash2, Heart, Users, MousePointerClick, TrendingUp, Archive, Pin, PinOff, User, ExternalLink, Github, Cpu, Database, Smartphone, LayoutGrid, List, ChevronDown, Clock, X, Link as LinkIcon, Edit3, Hash } from 'lucide-react';
+import { Eye, EyeOff, Plus, Search, ChevronRight, Filter, Layers, Trash2, Heart, Users, MousePointerClick, TrendingUp, Archive, Pin, PinOff, User, ExternalLink, Github, Cpu, Database, Smartphone, LayoutGrid, List, ChevronDown, ChevronUp, Clock, X, Link as LinkIcon, Edit3, Hash } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn, calculateReadingTime } from '../lib/utils';
 import { useToast } from '../components/ui/Toast';
@@ -383,10 +383,7 @@ export default function Repository() {
                             )}
 
                             {/* Compact Header (Always Visible) */}
-                            <div 
-                                className={cn("flex flex-col md:flex-row md:items-center justify-between gap-4 cursor-pointer group relative z-10", viewMode === 'grid' && "mb-5")}
-                                onClick={(e) => viewMode === 'list' ? toggleExpand(e, post.id) : null}
-                            >
+                            <div className={cn("flex flex-col md:flex-row md:items-center justify-between gap-4 relative z-10", viewMode === 'grid' && "mb-5")}>
                                 <div className="flex flex-wrap items-center gap-2 pr-20"> {/* pr-20 to avoid overlap with pin badge */}
                                     <span className={cn(
                                         "px-3 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-wider border",
@@ -408,11 +405,6 @@ export default function Repository() {
                                     <span className="text-[10px] text-muted-foreground font-mono uppercase tracking-wider flex items-center gap-1">
                                         <Clock size={12} /> {format(new Date(post.created_at), 'MMM d, yyyy')}
                                     </span>
-                                    {viewMode === 'list' && (
-                                        <button className="p-1.5 rounded-full bg-secondary text-muted-foreground group-hover:bg-primary/10 group-hover:text-primary transition-colors">
-                                            <ChevronDown size={16} className={cn("transition-transform duration-300", isExpanded && "rotate-180")} />
-                                        </button>
-                                    )}
                                 </div>
                             </div>
 
@@ -520,6 +512,25 @@ export default function Repository() {
                                     </motion.div>
                                 )}
                             </AnimatePresence>
+
+                            {/* User Friendly Expand Button for List View */}
+                            {viewMode === 'list' && (
+                                <button
+                                    onClick={(e) => toggleExpand(e, post.id)}
+                                    className={cn(
+                                        "mt-4 w-full py-2.5 rounded-xl text-xs font-bold transition-colors flex items-center justify-center gap-2",
+                                        isExpanded 
+                                            ? "bg-secondary text-foreground" 
+                                            : "bg-secondary/50 text-muted-foreground hover:bg-secondary hover:text-foreground"
+                                    )}
+                                >
+                                    {isExpanded ? (
+                                        <><ChevronUp size={14} /> Tutup Detail</>
+                                    ) : (
+                                        <><ChevronDown size={14} /> Lihat Detail</>
+                                    )}
+                                </button>
+                            )}
                         </motion.div>
                         );
                     })}

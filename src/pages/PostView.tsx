@@ -1,8 +1,8 @@
-import React, { useEffect, useState, useRef, useMemo } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { supabase, type Post } from '../lib/supabase';
 import { format } from 'date-fns';
-import { ArrowLeft, Edit3, Clock, Share2, Heart, Link as LinkIcon, Twitter, Linkedin, MessageCircle, Download, ImageIcon, X, Loader2, Feather, Send, Moon, Sun, RefreshCw, Maximize, Smartphone, Square, Layout, MousePointerClick, TextCursorInput, Globe, Microscope, Book, MessageSquareQuote, FileText, Pin, Maximize2, Minimize2, ShieldCheck, Lock, Eye, Share, Facebook, Mail, Layers, Plus, Trash2, Quote } from 'lucide-react';
+import { ArrowLeft, Edit3, Clock, Share2, Heart, Link as LinkIcon, Twitter, Linkedin, MessageCircle, Download, ImageIcon, X, Loader2, Feather, Send, Moon, Sun, RefreshCw, Maximize, Smartphone, Square, Layout, MousePointerClick, TextCursorInput, Globe, Microscope, Book, MessageSquareQuote, FileText, Pin, Maximize2, Minimize2, ShieldCheck, Lock, Eye, Share, Facebook, Mail, Layers, Quote, Plus, Trash2 } from 'lucide-react';
 import { calculateReadingTime } from '../lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MarkdownRenderer } from '../components/MarkdownRenderer';
@@ -14,11 +14,6 @@ import html2canvas from 'html2canvas';
 type AspectRatio = 'auto' | 'portrait' | 'square' | 'story';
 type CardTheme = 'dark' | 'light';
 type ShareMode = 'single' | 'carousel';
-
-interface SlideData {
-    id: string;
-    text: string;
-}
 
 export default function PostView() {
   const { id } = useParams();
@@ -39,8 +34,8 @@ export default function PostView() {
   const [cardTheme, setCardTheme] = useState<CardTheme>('light'); 
   const [customExcerpt, setCustomExcerpt] = useState('');
   
-  // Interactive Carousel State
-  const [carouselSlides, setCarouselSlides] = useState<SlideData[]>([]);
+  // Interactive Carousel State (Array of Slides)
+  const [slides, setSlides] = useState<string[]>([]);
   
   const [isSelectingText, setIsSelectingText] = useState(false);
   
@@ -115,8 +110,9 @@ export default function PostView() {
     }
   }, [id]);
 
+  // Auto-populate Carousel Slides on load
   useEffect(() => {
-      if (post && carouselSlides.length === 0) {
+      if (post && slides.length === 0) {
           const paragraphs = post.content
               .split(/\n\n+/)
               .map(p => p.replace(/!\[.*?\]\(.*?\)/g, '') 
@@ -128,14 +124,9 @@ export default function PostView() {
               )
               .filter(p => p.length > 0);
           
-          const initialSlides = paragraphs.map(p => ({
-              id: Math.random().toString(36).substring(2, 9),
-              text: p
-          }));
-          
-          setCarouselSlides(initialSlides.length > 0 ? initialSlides : [{ id: '1', text: "" }]);
+          setSlides(paragraphs.length > 0 ? paragraphs : ['']);
       }
-  }, [post]);
+  }, [post, slides.length]);
 
   useEffect(() => {
     if (showVisualShare && !isSelectingText) {
@@ -355,10 +346,7 @@ export default function PostView() {
             setCustomExcerpt(selection);
             toast("Selection captured!", "success");
         } else {
-            setCarouselSlides(prev => [...prev, { 
-                id: Math.random().toString(36).substring(2, 9), 
-                text: selection 
-            }]);
+            setSlides(prev => [...prev, selection]);
             toast("Selection added as new slide!", "success");
         }
     } else {
@@ -373,6 +361,12 @@ export default function PostView() {
     setShowVisualShare(true);
   };
 
+  // Auto-resize textarea handler
+  const handleTextareaInput = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+      e.target.style.height = 'auto';
+      e.target.style.height = `${e.target.scrollHeight}px`;
+  };
+
   const getCategoryIcon = (category?: string) => {
     switch(category) {
         case 'Penelitian': return Microscope;
@@ -384,27 +378,7 @@ export default function PostView() {
   
   const BackgroundIcon = getCategoryIcon(post?.category);
 
-  const updateSlide = (id: string, text: string) => {
-      setCarouselSlides(prev => prev.map(slide => 
-          slide.id === id ? { ...slide, text } : slide
-      ));
-  };
-
-  const removeSlide = (id: string) => {
-      setCarouselSlides(prev => {
-          const newSlides = prev.filter(slide => slide.id !== id);
-          return newSlides.length > 0 ? newSlides : [{ id: Math.random().toString(36).substring(2, 9), text: "" }];
-      });
-  };
-
-  const addSlide = () => {
-      setCarouselSlides(prev => [...prev, { 
-          id: Math.random().toString(36).substring(2, 9), 
-          text: "" 
-      }]);
-  };
-
-  carouselRefs.current = new Array(carouselSlides.length + 2).fill(null);
+  carouselRefs.current = new Array(slides.length + 2).fill(null);
 
   if (!post) return (
     <div className="min-h-screen flex items-center justify-center">
@@ -701,7 +675,7 @@ export default function PostView() {
             )}
         </AnimatePresence>
 
-        {/* Visual Share Modal (Enhanced with Adaptive Carousel Builder) */}
+        {/* Visual Share Modal */}
         <AnimatePresence>
             {showVisualShare && (
                 <motion.div 
@@ -734,7 +708,7 @@ export default function PostView() {
                                 
                                 {/* Left Column: Settings */}
                                 <div className="space-y-6">
-                                    {/* Size Selector (Now available for BOTH modes) */}
+                                    {/* Size Selector */}
                                     <div className="space-y-3">
                                         <span className="text-xs font-bold uppercase text-muted-foreground flex items-center gap-2">
                                             <Maximize size={14} /> {t('post.cardSize')}
@@ -776,15 +750,13 @@ export default function PostView() {
                                         </div>
                                     </div>
 
-                                    {/* Add from Selection (Only Carousel) */}
-                                    {shareMode === 'carousel' && (
-                                        <button 
-                                            onClick={startSelectionMode}
-                                            className="w-full py-3 rounded-xl bg-primary/10 text-primary font-bold text-xs flex items-center justify-center gap-2 hover:bg-primary/20 transition-colors border border-primary/20"
-                                        >
-                                            <MousePointerClick size={14} /> Tambah dari Teks
-                                        </button>
-                                    )}
+                                    {/* Add from Selection */}
+                                    <button 
+                                        onClick={startSelectionMode}
+                                        className="w-full py-3 rounded-xl bg-primary/10 text-primary font-bold text-xs flex items-center justify-center gap-2 hover:bg-primary/20 transition-colors border border-primary/20"
+                                    >
+                                        <MousePointerClick size={14} /> Tambah dari Teks Artikel
+                                    </button>
                                 </div>
 
                                 {/* Right Column: Text Editor */}
@@ -793,64 +765,79 @@ export default function PostView() {
                                         <div className="space-y-3 h-full flex flex-col">
                                             <div className="flex justify-between items-center">
                                                 <span className="text-xs font-bold uppercase text-muted-foreground">{t('post.customizeText')}</span>
-                                                <div className="flex items-center gap-3">
-                                                    <button 
-                                                        onClick={startSelectionMode}
-                                                        className="text-[10px] font-bold text-primary flex items-center gap-1 hover:underline bg-primary/10 px-3 py-1.5 rounded-full"
-                                                    >
-                                                        <MousePointerClick size={12} /> {t('post.selectFromPage')}
-                                                    </button>
-                                                    <button 
-                                                        onClick={() => setCustomExcerpt(post.excerpt || post.content.substring(0, 120))}
-                                                        className="text-[10px] font-bold text-muted-foreground flex items-center gap-1 hover:text-foreground"
-                                                    >
-                                                        <RefreshCw size={10} /> {t('post.reset')}
-                                                    </button>
-                                                </div>
+                                                <button 
+                                                    onClick={() => setCustomExcerpt(post.excerpt || post.content.substring(0, 120))}
+                                                    className="text-[10px] font-bold text-muted-foreground flex items-center gap-1 hover:text-foreground"
+                                                >
+                                                    <RefreshCw size={10} /> {t('post.reset')}
+                                                </button>
                                             </div>
                                             <textarea 
                                                 value={customExcerpt}
-                                                onChange={(e) => setCustomExcerpt(e.target.value)}
-                                                className="w-full flex-grow bg-secondary/80 border border-border/50 rounded-[1.5rem] p-4 text-sm focus:border-primary outline-none transition-all resize-none min-h-[120px]"
-                                                placeholder="Enter text to display on card..."
+                                                onChange={(e) => {
+                                                    setCustomExcerpt(e.target.value);
+                                                    handleTextareaInput(e);
+                                                }}
+                                                onInput={handleTextareaInput}
+                                                className="w-full flex-grow bg-secondary/80 border border-border/50 rounded-[1.5rem] p-4 text-sm focus:border-primary outline-none transition-all resize-none overflow-hidden"
+                                                placeholder="Ketik teks kutipan di sini..."
+                                                rows={4}
                                             />
                                         </div>
                                     ) : (
-                                        <div className="space-y-3 h-full flex flex-col">
+                                        <div className="space-y-3 h-full flex flex-col max-h-[400px]">
                                             <div className="flex justify-between items-center">
-                                                <span className="text-xs font-bold uppercase text-muted-foreground">Editor Slide Carousel</span>
-                                                <span className="text-[10px] text-muted-foreground bg-secondary px-2 py-1 rounded-md border border-border/50">{carouselSlides.length} Slide</span>
+                                                <span className="text-xs font-bold uppercase text-muted-foreground">Editor Carousel</span>
+                                                <span className="text-[10px] text-primary bg-primary/10 px-2 py-1 rounded-md border border-primary/20 font-bold">
+                                                    {slides.length} Slide
+                                                </span>
                                             </div>
                                             
-                                            <div className="space-y-3 flex-grow overflow-y-auto pr-2 custom-scrollbar max-h-[250px]">
-                                                {carouselSlides.map((slide, index) => (
-                                                    <div key={slide.id} className="relative group">
-                                                        <div className="flex justify-between items-center mb-1.5 px-1">
-                                                            <span className="text-[10px] font-bold text-primary uppercase tracking-wider">Slide {index + 1}</span>
-                                                            <button 
-                                                                onClick={() => removeSlide(slide.id)}
-                                                                className="text-muted-foreground hover:text-destructive transition-colors p-1"
-                                                                title="Hapus Slide"
-                                                            >
-                                                                <Trash2 size={12} />
-                                                            </button>
-                                                        </div>
-                                                        <textarea 
-                                                            value={slide.text}
-                                                            onChange={(e) => updateSlide(slide.id, e.target.value)}
-                                                            className="w-full bg-secondary/80 border border-border/50 rounded-xl p-3 text-sm focus:border-primary outline-none transition-all resize-y min-h-[80px]"
-                                                            placeholder={`Isi teks untuk slide ${index + 1}...`}
-                                                        />
-                                                    </div>
-                                                ))}
+                                            {/* Scrollable list of individual slide cards */}
+                                            <div className="flex-grow overflow-y-auto space-y-3 pr-2 custom-scrollbar">
+                                                <AnimatePresence>
+                                                    {slides.map((slide, index) => (
+                                                        <motion.div 
+                                                            key={index}
+                                                            initial={{ opacity: 0, scale: 0.95 }}
+                                                            animate={{ opacity: 1, scale: 1 }}
+                                                            exit={{ opacity: 0, scale: 0.95 }}
+                                                            className="bg-secondary/50 border border-border/50 rounded-[1.5rem] p-4 relative group"
+                                                        >
+                                                            <div className="flex justify-between items-center mb-2">
+                                                                <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Slide {index + 1}</span>
+                                                                <button 
+                                                                    onClick={() => setSlides(slides.filter((_, i) => i !== index))}
+                                                                    className="text-muted-foreground hover:text-destructive transition-colors p-1"
+                                                                    title="Hapus Slide"
+                                                                >
+                                                                    <Trash2 size={14} />
+                                                                </button>
+                                                            </div>
+                                                            <textarea
+                                                                value={slide}
+                                                                onChange={(e) => {
+                                                                    const newSlides = [...slides];
+                                                                    newSlides[index] = e.target.value;
+                                                                    setSlides(newSlides);
+                                                                    handleTextareaInput(e);
+                                                                }}
+                                                                onInput={handleTextareaInput}
+                                                                className="w-full bg-transparent border-none outline-none text-sm resize-none overflow-hidden leading-relaxed"
+                                                                rows={3}
+                                                                placeholder="Isi teks slide di sini..."
+                                                            />
+                                                        </motion.div>
+                                                    ))}
+                                                </AnimatePresence>
+
+                                                <button 
+                                                    onClick={() => setSlides([...slides, ''])}
+                                                    className="w-full py-4 rounded-[1.5rem] border border-dashed border-border text-muted-foreground hover:text-primary hover:border-primary/50 hover:bg-primary/5 transition-all text-sm font-bold flex items-center justify-center gap-2"
+                                                >
+                                                    <Plus size={16} /> Tambah Slide Baru
+                                                </button>
                                             </div>
-                                            
-                                            <button 
-                                                onClick={addSlide}
-                                                className="w-full py-2.5 rounded-xl border border-dashed border-border/80 text-muted-foreground hover:text-foreground hover:border-border hover:bg-secondary/50 transition-all text-xs font-bold flex items-center justify-center gap-2"
-                                            >
-                                                <Plus size={14} /> Tambah Slide Baru
-                                            </button>
                                         </div>
                                     )}
                                 </div>
@@ -859,7 +846,7 @@ export default function PostView() {
 
                         {/* PREVIEW AREA */}
                         {shareMode === 'single' ? (
-                            // SINGLE CARD PREVIEW (Wider & Cleaner)
+                            // SINGLE CARD PREVIEW
                             <div className="w-full max-w-3xl flex justify-center mb-8">
                                 <div ref={singleCardRef} style={{ backgroundColor: 'transparent' }}>
                                     <div 
@@ -901,7 +888,7 @@ export default function PostView() {
                                             </div>
                                         </div>
 
-                                        {/* Main Content (Clean Sans-Serif Quote) */}
+                                        {/* Main Content */}
                                         <div className="relative z-10 flex-grow flex flex-col justify-center mb-10 w-full">
                                             <h2 className={cn(
                                                 "text-3xl md:text-4xl font-bold tracking-tight mb-8 leading-[1.2]", 
@@ -954,7 +941,7 @@ export default function PostView() {
                                 </div>
                             </div>
                         ) : (
-                            // CAROUSEL PREVIEW (Adaptive Height via items-start)
+                            // CAROUSEL PREVIEW
                             <div className="w-full overflow-x-auto pb-8 no-scrollbar flex items-start gap-6 snap-x snap-mandatory px-4 md:px-0">
                                 {/* Slide 1: Cover */}
                                 <div ref={(el) => { if (el) carouselRefs.current[0] = el; }} className="shrink-0 snap-center" style={{ backgroundColor: 'transparent' }}>
@@ -1010,8 +997,8 @@ export default function PostView() {
                                 </div>
 
                                 {/* Slide 2..N: Content Chunks */}
-                                {carouselSlides.map((slide, index) => (
-                                    <div key={slide.id} ref={(el) => { if(el) carouselRefs.current[index + 1] = el; }} className="shrink-0 snap-center" style={{ backgroundColor: 'transparent' }}>
+                                {slides.map((slideText, index) => (
+                                    <div key={index} ref={(el) => { if(el) carouselRefs.current[index + 1] = el; }} className="shrink-0 snap-center" style={{ backgroundColor: 'transparent' }}>
                                         <div 
                                             className={cn(
                                                 "w-[340px] md:w-[400px] relative flex flex-col overflow-hidden",
@@ -1035,20 +1022,20 @@ export default function PostView() {
                                                     "text-lg md:text-xl leading-relaxed whitespace-pre-wrap", 
                                                     cardTheme === 'dark' ? "text-[#D4D4D4]" : "text-[#333333]"
                                                 )} style={{ fontFamily: 'serif' }}>
-                                                    {slide.text || "..."}
+                                                    {slideText || "..."}
                                                 </p>
                                             </div>
 
                                             <div className="relative z-10 pt-8 flex justify-between items-center opacity-40 w-full mt-auto">
                                                 <Feather size={18} />
-                                                <span className="text-[10px] font-bold tracking-widest" style={{ fontFamily: 'sans-serif' }}>{index + 1} / {carouselSlides.length}</span>
+                                                <span className="text-[10px] font-bold tracking-widest" style={{ fontFamily: 'sans-serif' }}>{index + 1} / {slides.length}</span>
                                             </div>
                                         </div>
                                     </div>
                                 ))}
 
                                 {/* Slide N+1: Outro */}
-                                <div ref={(el) => { if(el) carouselRefs.current[carouselSlides.length + 1] = el; }} className="shrink-0 snap-center" style={{ backgroundColor: 'transparent' }}>
+                                <div ref={(el) => { if(el) carouselRefs.current[slides.length + 1] = el; }} className="shrink-0 snap-center" style={{ backgroundColor: 'transparent' }}>
                                     <div 
                                         className={cn(
                                             "w-[340px] md:w-[400px] relative flex flex-col justify-center items-center text-center overflow-hidden",

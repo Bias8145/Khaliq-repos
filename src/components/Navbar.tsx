@@ -135,7 +135,7 @@ export default function Navbar() {
                                             <span className="text-xs font-bold text-muted-foreground ml-2">A</span>
                                             <input 
                                                 type="range" 
-                                                min="12" 
+                                                min="4" 
                                                 max="24" 
                                                 step="1"
                                                 value={fontSize}
@@ -272,7 +272,7 @@ export default function Navbar() {
                             <span className="text-xs text-muted-foreground ml-2">A</span>
                             <input 
                                 type="range" 
-                                min="12" 
+                                min="4" 
                                 max="24" 
                                 step="1"
                                 value={fontSize}
