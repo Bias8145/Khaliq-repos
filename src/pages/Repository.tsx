@@ -2,7 +2,7 @@ import React, { useEffect, useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { supabase, type Post } from '../lib/supabase';
 import { format } from 'date-fns';
-import { Eye, EyeOff, Plus, Search, ChevronRight, Filter, Layers, Trash2, Heart, Users, MousePointerClick, TrendingUp, Archive, Pin, PinOff, User, ExternalLink, Github, Cpu, Database, Smartphone, LayoutGrid, List, ChevronDown, ChevronUp, Clock, X, Link as LinkIcon, Edit3, Hash, Quote } from 'lucide-react';
+import { Eye, EyeOff, Plus, Search, ChevronRight, Filter, Layers, Trash2, Heart, Users, MousePointerClick, TrendingUp, Archive, Pin, PinOff, User, ExternalLink, Github, Cpu, Database, Smartphone, LayoutGrid, List, Clock, X, Link as LinkIcon, Edit3, Hash, Quote } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn, calculateReadingTime } from '../lib/utils';
 import { useToast } from '../components/ui/Toast';
@@ -102,7 +102,7 @@ export default function Repository() {
     return Array.from(topics).slice(0, 8); // Top 8 topics
   }, [posts]);
 
-  // Toggle Accordion Panel (Now without event parameter since whole card is clickable)
+  // Toggle Accordion Panel
   const toggleExpand = (id: string) => {
       const newSet = new Set(expandedPosts);
       if (newSet.has(id)) {
@@ -203,7 +203,6 @@ export default function Repository() {
     if (activeTab === 'Drafts') {
         filtered = filtered.filter(p => p.status === 'draft');
     } else if (activeTab !== 'All') {
-        // Allow filtering by subcategory as well if clicked from Topics cloud
         filtered = filtered.filter(p => p.category === activeTab || p.subcategory === activeTab);
     }
 
@@ -370,7 +369,7 @@ export default function Repository() {
                                 </div>
                             )}
 
-                            {/* Header: Tags & Date (Inline Pin Badge) */}
+                            {/* Header: Tags & Date + Aesthetic Expand Icon */}
                             <div className={cn("flex flex-col md:flex-row md:items-center justify-between gap-4 relative z-10", viewMode === 'grid' && "mb-5")}>
                                 <div className="flex flex-wrap items-center gap-2">
                                     {post.is_pinned && (
@@ -394,10 +393,22 @@ export default function Repository() {
                                     )}
                                 </div>
                                 
-                                <div className="flex items-center gap-3">
+                                <div className="flex items-center gap-4">
                                     <span className="text-[10px] text-muted-foreground font-mono uppercase tracking-wider flex items-center gap-1">
                                         <Clock size={12} /> {format(new Date(post.created_at), 'MMM d, yyyy')}
                                     </span>
+                                    
+                                    {/* Aesthetic Plus/Cross Expand Indicator */}
+                                    {viewMode === 'list' && (
+                                        <div className={cn(
+                                            "w-7 h-7 rounded-full flex items-center justify-center transition-all duration-500 shrink-0 border",
+                                            isExpanded 
+                                                ? "bg-primary text-primary-foreground border-primary rotate-45 shadow-sm" 
+                                                : "bg-secondary text-muted-foreground border-transparent group-hover:bg-primary/10 group-hover:text-primary"
+                                        )}>
+                                            <Plus size={14} strokeWidth={3} />
+                                        </div>
+                                    )}
                                 </div>
                             </div>
 
@@ -407,7 +418,7 @@ export default function Repository() {
                                 onClick={(e) => e.stopPropagation()} 
                                 className={cn("block mt-4 relative z-10", viewMode === 'grid' && "flex-grow")}
                             >
-                                <h3 className="text-xl md:text-2xl font-serif font-bold text-foreground hover:text-primary transition-colors leading-tight">
+                                <h3 className="text-xl md:text-2xl font-serif font-bold text-foreground hover:text-primary transition-colors leading-tight pr-8">
                                     {post.title}
                                 </h3>
                             </Link>
@@ -516,18 +527,6 @@ export default function Repository() {
                                     </motion.div>
                                 )}
                             </AnimatePresence>
-
-                            {/* Aesthetic Visual Indicator for Expand/Collapse (No Text) */}
-                            {viewMode === 'list' && (
-                                <div className="w-full flex justify-center mt-3 relative z-10">
-                                    <div className={cn(
-                                        "w-8 h-8 rounded-full bg-secondary/50 flex items-center justify-center text-muted-foreground transition-all duration-300 group-hover:bg-primary/10 group-hover:text-primary",
-                                        isExpanded ? "rotate-180" : "rotate-0"
-                                    )}>
-                                        <ChevronDown size={18} />
-                                    </div>
-                                </div>
-                            )}
                         </motion.div>
                         );
                     })}
