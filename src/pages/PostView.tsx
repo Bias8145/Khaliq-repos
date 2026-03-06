@@ -874,7 +874,7 @@ export default function PostView() {
                                         <div className="relative z-10 flex items-center gap-4 mb-10">
                                             <div className={cn(
                                                 "w-12 h-12 rounded-full border flex items-center justify-center shrink-0",
-                                                cardTheme === 'dark' ? "border-[#CBAE70]/30 bg-[#CBAE70]/10 text-[#CBAE70]" : "border-[#B39559]/30 bg-[#B39559]/10 text-[#B39559]"
+                                                cardTheme === 'dark' ? "border-[#C4B59D]/30 bg-[#C4B59D]/10 text-[#C4B59D]" : "border-[#A99370]/30 bg-[#A99370]/10 text-[#A99370]"
                                             )}>
                                                 <Feather size={20} />
                                             </div>
@@ -900,7 +900,7 @@ export default function PostView() {
                                             <div className="relative mt-2">
                                                 <Quote size={32} className={cn(
                                                     "mb-4 opacity-40",
-                                                    cardTheme === 'dark' ? "text-[#CBAE70]" : "text-[#B39559]"
+                                                    cardTheme === 'dark' ? "text-[#C4B59D]" : "text-[#A99370]"
                                                 )} />
                                                 <p className={cn(
                                                     "text-xl md:text-2xl leading-[1.6] whitespace-pre-wrap font-medium", 
@@ -932,7 +932,7 @@ export default function PostView() {
                                                 <p className={cn("text-xs uppercase tracking-wider opacity-60 mb-1", cardTheme === 'dark' ? "text-[#E5E5E5]" : "text-[#1A1A1A]")} style={{ fontFamily: 'sans-serif' }}>
                                                     {format(new Date(post.created_at), 'MMMM d, yyyy')}
                                                 </p>
-                                                <p className={cn("text-sm font-bold", cardTheme === 'dark' ? "text-[#CBAE70]" : "text-[#B39559]")} style={{ fontFamily: 'sans-serif' }}>
+                                                <p className={cn("text-sm font-bold", cardTheme === 'dark' ? "text-[#C4B59D]" : "text-[#A99370]")} style={{ fontFamily: 'sans-serif' }}>
                                                     {post.category || 'Bahasan'} • {readingTime} min read
                                                 </p>
                                             </div>
@@ -969,7 +969,7 @@ export default function PostView() {
                                         <div className="relative z-10 w-full mb-12">
                                             <span className={cn(
                                                 "inline-block px-4 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-wider mb-8 border",
-                                                cardTheme === 'dark' ? "border-[#CBAE70]/30 bg-[#CBAE70]/10 text-[#CBAE70]" : "border-[#B39559]/30 bg-[#B39559]/10 text-[#B39559]"
+                                                cardTheme === 'dark' ? "border-[#C4B59D]/30 bg-[#C4B59D]/10 text-[#C4B59D]" : "border-[#A99370]/30 bg-[#A99370]/10 text-[#A99370]"
                                             )} style={{ fontFamily: 'sans-serif' }}>
                                                 {post.category || 'General'}
                                             </span>
@@ -1057,7 +1057,7 @@ export default function PostView() {
                                         <div className="relative z-10 flex flex-col items-center w-full">
                                             <div className={cn(
                                                 "w-20 h-20 rounded-full border-2 flex items-center justify-center mb-8",
-                                                cardTheme === 'dark' ? "border-[#CBAE70] text-[#CBAE70]" : "border-[#B39559] text-[#B39559]"
+                                                cardTheme === 'dark' ? "border-[#C4B59D] text-[#C4B59D]" : "border-[#A99370] text-[#A99370]"
                                             )}>
                                                 <Feather size={32} />
                                             </div>

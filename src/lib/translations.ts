@@ -3,7 +3,7 @@ export const translations = {
     nav: {
       home: "Home",
       repository: "Repository",
-      digitalGarden: "Digital Garden",
+      digitalGarden: "Public Archive",
       write: "Write",
       settings: "Display Settings",
       language: "Language",
@@ -62,7 +62,7 @@ export const translations = {
     repo: {
       title: "Repository",
       adminTitle: "Admin Dashboard",
-      desc: "A collection of notes, research, and discussions.",
+      desc: "A collection of notes, project documentation, and explorations of technology and life.",
       adminDesc: "Manage your digital garden. Track stats, edit posts, and publish new research.",
       search: "Search repository...",
       noEntries: "No entries found matching your criteria.",
@@ -170,7 +170,7 @@ export const translations = {
     nav: {
       home: "Beranda",
       repository: "Repositori",
-      digitalGarden: "Kebun Digital",
+      digitalGarden: "Arsip Publik",
       write: "Tulis",
       settings: "Pengaturan Tampilan",
       language: "Bahasa",
@@ -216,7 +216,7 @@ export const translations = {
       }
     },
     footer: {
-      desc: "Arsip digital yang berisi catatan, penelitian, dan bahasan. Dikurasi dengan presisi.",
+      desc: "Kumpulan catatan, dokumentasi proyek, dan eksplorasi ide seputar teknologi dan kehidupan.",
       nav: "Navigasi",
       location: "Lokasi & Akses",
       westJava: "Jawa Barat, Indonesia",
@@ -229,11 +229,11 @@ export const translations = {
     repo: {
       title: "Repositori",
       adminTitle: "Dasbor Admin",
-      desc: "Koleksi catatan, penelitian, dan diskusi.",
+      desc: "Kumpulan catatan, dokumentasi proyek, dan eksplorasi ide seputar teknologi dan kehidupan.",
       adminDesc: "Kelola kebun digital Anda. Pantau statistik, edit tulisan, dan publikasikan penelitian baru.",
-      search: "Cari repositori...",
-      noEntries: "Tidak ada entri yang ditemukan.",
-      newEntry: "Entri Baru",
+      search: "Cari tulisan...",
+      noEntries: "Tidak ada tulisan yang ditemukan.",
+      newEntry: "Tulis Baru",
       tabs: {
         all: "Semua",
         notes: "Catatan",

@@ -10,7 +10,7 @@
     /* Dynamic Font Base */
     --base-font-size: 16px;
 
-    /* Light Mode - Warm White & Faded Gold */
+    /* Light Mode - Warm White & Muted Champagne Gold */
     --background: 40 20% 98%; /* Very subtle warm off-white */
     --foreground: 0 0% 15%; /* Softer dark text */
     
@@ -20,8 +20,8 @@
     --popover: 0 0% 100%;
     --popover-foreground: 0 0% 15%;
     
-    /* Primary: Soft Faded Gold / Brownish Yellow */
-    --primary: 42 40% 50%; /* #B39559 - Muted Brass/Gold */
+    /* Primary: #A99370 - Slightly darker variant of #C4B59D for light mode contrast */
+    --primary: 37 25% 55%; 
     --primary-foreground: 0 0% 100%;
     
     --secondary: 40 10% 94%; /* Warm light gray */
@@ -30,22 +30,22 @@
     --muted: 40 10% 94%;
     --muted-foreground: 0 0% 45%;
     
-    --accent: 42 40% 90%;
-    --accent-foreground: 42 40% 30%;
+    --accent: 37 25% 90%;
+    --accent-foreground: 37 25% 30%;
     
     --destructive: 0 60% 55%;
     --destructive-foreground: 0 0% 98%;
 
     --border: 40 10% 88%;
     --input: 40 10% 88%;
-    --ring: 42 40% 50%;
+    --ring: 37 25% 55%;
     
     /* Material 3 Expressive Base Radius */
     --radius: 1.5rem;
   }
 
   .dark {
-    /* Dark Mode - True Deep Dark & Faded Gold */
+    /* Dark Mode - True Deep Dark & Muted Champagne Gold */
     --background: 0 0% 8%; /* #141414 - True Dark */
     --foreground: 0 0% 90%; /* Soft white text */
     
@@ -55,8 +55,8 @@
     --popover: 0 0% 11%;
     --popover-foreground: 0 0% 90%;
     
-    /* Primary: Soft Faded Gold for Dark Mode */
-    --primary: 42 45% 60%; /* #CBAE70 - Soft Sand/Gold */
+    /* Primary: #C4B59D - Exact color from the SEO Favicon */
+    --primary: 37 25% 69%; 
     --primary-foreground: 0 0% 10%;
     
     --secondary: 0 0% 15%; /* #262626 */
@@ -65,15 +65,15 @@
     --muted: 0 0% 15%;
     --muted-foreground: 0 0% 60%;
     
-    --accent: 42 45% 20%;
-    --accent-foreground: 42 45% 80%;
+    --accent: 37 25% 20%;
+    --accent-foreground: 37 25% 80%;
     
     --destructive: 0 50% 50%;
     --destructive-foreground: 0 0% 98%;
     
     --border: 0 0% 18%; /* #2E2E2E */
     --input: 0 0% 18%;
-    --ring: 42 45% 60%;
+    --ring: 37 25% 69%;
   }
 }
 

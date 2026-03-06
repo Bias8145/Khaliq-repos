@@ -266,13 +266,13 @@ export default function Repository() {
                 <div>
                     <div className="inline-flex items-center gap-3 px-4 py-1.5 mb-4 rounded-full bg-secondary text-foreground text-[10px] font-bold tracking-[0.2em] uppercase border border-border/50">
                         <span className="w-2 h-2 rounded-full bg-primary"></span>
-                        Digital Garden
+                        {t('nav.digitalGarden')}
                     </div>
                     <h1 className="text-3xl md:text-5xl font-serif font-bold text-foreground mb-3 tracking-tight">
                         {t('repo.title')}
                     </h1>
                     <p className="text-muted-foreground max-w-md text-sm md:text-base leading-relaxed">
-                        A curation of technical notes, system architecture research, and philosophical inquiries.
+                        {t('repo.desc')}
                     </p>
                 </div>
                 
@@ -284,18 +284,20 @@ export default function Repository() {
                 )}
             </div>
 
-            {/* Filters & Search - Frosted Dock */}
-            <div className="bg-card/80 backdrop-blur-xl border border-border/50 rounded-[2rem] p-3 shadow-sm flex flex-col md:flex-row gap-4 justify-between items-center sticky top-[6.5rem] z-30 transition-all">
+            {/* Filters & Search - Sleek Dock */}
+            <div className="bg-card/80 backdrop-blur-xl border border-border/60 rounded-[2rem] md:rounded-full p-2 shadow-sm flex flex-col md:flex-row gap-3 justify-between items-center sticky top-[6.5rem] z-30 transition-all">
                 
                 {/* Segmented Control Style Tabs */}
-                <div className="flex gap-1 overflow-x-auto w-full md:w-auto p-1 bg-secondary/50 rounded-[1.5rem] no-scrollbar border border-border/50">
+                <div className="flex gap-1 overflow-x-auto w-full md:w-auto no-scrollbar">
                     {tabs.map(tab => (
                         <button
                             key={tab.id}
                             onClick={() => setActiveTab(tab.id)}
                             className={cn(
-                                "px-5 py-2 rounded-[1.2rem] text-sm font-bold transition-all whitespace-nowrap",
-                                activeTab === tab.id ? "bg-card text-foreground shadow-sm border border-border/50" : "text-muted-foreground hover:text-foreground"
+                                "px-6 py-2.5 rounded-full text-sm font-bold transition-all whitespace-nowrap",
+                                activeTab === tab.id 
+                                    ? "bg-primary text-primary-foreground shadow-sm" 
+                                    : "bg-transparent text-muted-foreground hover:bg-secondary hover:text-foreground"
                             )}
                         >
                             {tab.label}
@@ -303,35 +305,37 @@ export default function Repository() {
                     ))}
                 </div>
 
-                <div className="flex items-center gap-3 w-full md:w-auto">
-                    <div className="relative w-full md:w-64 flex items-center">
-                        <Search className="absolute left-4 text-muted-foreground" size={18} />
+                {/* Search & View Mode */}
+                <div className="flex items-center gap-2 w-full md:w-auto bg-secondary/50 rounded-full p-1.5 border border-border/50">
+                    <div className="relative w-full md:w-56 flex items-center">
+                        <Search className="absolute left-3 text-muted-foreground" size={16} />
                         <input 
                             type="text" 
                             placeholder={t('repo.search')} 
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
-                            className="w-full bg-secondary/50 border border-border/50 rounded-full py-3 pl-12 pr-10 text-sm focus:border-primary outline-none transition-all"
+                            className="w-full bg-transparent border-none py-2 pl-10 pr-8 text-sm focus:outline-none transition-all placeholder:text-muted-foreground/70"
                         />
                         {searchQuery && (
                             <button 
                                 onClick={() => setSearchQuery('')}
-                                className="absolute right-3 p-1.5 rounded-full bg-card text-muted-foreground hover:text-foreground shadow-sm border border-border/50"
+                                className="absolute right-2 p-1 rounded-full hover:bg-border text-muted-foreground transition-colors"
                             >
                                 <X size={14} />
                             </button>
                         )}
                     </div>
-                    <div className="hidden md:flex bg-secondary/50 rounded-full p-1 border border-border/50">
+                    <div className="w-px h-5 bg-border/80 mx-1 hidden md:block"></div>
+                    <div className="hidden md:flex gap-1 pr-1">
                         <button 
                             onClick={() => setViewMode('list')} 
-                            className={cn("p-2 rounded-full transition-colors", viewMode === 'list' ? "bg-card shadow-sm text-primary border border-border/50" : "text-muted-foreground hover:text-foreground")}
+                            className={cn("p-2 rounded-full transition-colors", viewMode === 'list' ? "bg-card shadow-sm text-primary" : "text-muted-foreground hover:text-foreground")}
                         >
                             <List size={16} />
                         </button>
                         <button 
                             onClick={() => setViewMode('grid')} 
-                            className={cn("p-2 rounded-full transition-colors", viewMode === 'grid' ? "bg-card shadow-sm text-primary border border-border/50" : "text-muted-foreground hover:text-foreground")}
+                            className={cn("p-2 rounded-full transition-colors", viewMode === 'grid' ? "bg-card shadow-sm text-primary" : "text-muted-foreground hover:text-foreground")}
                         >
                             <LayoutGrid size={16} />
                         </button>

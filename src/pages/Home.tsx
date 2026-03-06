@@ -431,7 +431,7 @@ export default function Home() {
                                 <div className="relative z-10 flex items-center gap-4 mb-10">
                                     <div className={cn(
                                         "w-12 h-12 rounded-full border flex items-center justify-center",
-                                        cardTheme === 'dark' ? "border-[#CBAE70]/30 bg-[#CBAE70]/10 text-[#CBAE70]" : "border-[#B39559]/30 bg-[#B39559]/10 text-[#B39559]"
+                                        cardTheme === 'dark' ? "border-[#C4B59D]/30 bg-[#C4B59D]/10 text-[#C4B59D]" : "border-[#A99370]/30 bg-[#A99370]/10 text-[#A99370]"
                                     )}>
                                         <Feather size={20} />
                                     </div>
@@ -457,7 +457,7 @@ export default function Home() {
                                     <div className="relative mt-2">
                                         <Quote size={32} className={cn(
                                             "mb-4 opacity-40",
-                                            cardTheme === 'dark' ? "text-[#CBAE70]" : "text-[#B39559]"
+                                            cardTheme === 'dark' ? "text-[#C4B59D]" : "text-[#A99370]"
                                         )} />
                                         <p className={cn(
                                             "text-xl md:text-2xl leading-[1.6] whitespace-pre-wrap font-medium", 
@@ -491,7 +491,7 @@ export default function Home() {
                                         <p className={cn("text-xs uppercase tracking-wider opacity-60 mb-1", cardTheme === 'dark' ? "text-[#E5E5E5]" : "text-[#1A1A1A]")} style={{ fontFamily: 'sans-serif' }}>
                                             {new Date().getFullYear()}
                                         </p>
-                                        <p className={cn("text-sm font-bold", cardTheme === 'dark' ? "text-[#CBAE70]" : "text-[#B39559]")} style={{ fontFamily: 'sans-serif' }}>
+                                        <p className={cn("text-sm font-bold", cardTheme === 'dark' ? "text-[#C4B59D]" : "text-[#A99370]")} style={{ fontFamily: 'sans-serif' }}>
                                             Portfolio & Research
                                         </p>
                                     </div>
