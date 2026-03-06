@@ -2,7 +2,7 @@ import React, { useEffect, useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { supabase, type Post } from '../lib/supabase';
 import { format } from 'date-fns';
-import { Eye, EyeOff, Plus, Search, ChevronRight, Filter, Layers, Trash2, Heart, Users, MousePointerClick, TrendingUp, Archive, Pin, PinOff, User, ExternalLink, Github, Cpu, Database, Smartphone, LayoutGrid, List, Clock, X, Link as LinkIcon, Edit3, Hash, Quote } from 'lucide-react';
+import { Eye, EyeOff, Plus, Search, ChevronRight, Filter, Layers, Trash2, Heart, Users, MousePointerClick, TrendingUp, Archive, Pin, PinOff, User, ExternalLink, Github, Cpu, Database, Smartphone, LayoutGrid, List, Clock, X, Link as LinkIcon, Edit3, Hash, Quote, Book, Microscope, MessageSquareQuote } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn, calculateReadingTime } from '../lib/utils';
 import { useToast } from '../components/ui/Toast';
@@ -236,13 +236,14 @@ export default function Repository() {
     );
   }
 
+  // Tabs Configuration with Icons
   const tabs = [
-      { id: 'All', label: t('repo.tabs.all') },
-      { id: 'Catatan', label: t('repo.tabs.notes') },
-      { id: 'Penelitian', label: t('repo.tabs.research') },
-      { id: 'Bahasan', label: t('repo.tabs.discussion') }
+      { id: 'All', label: t('repo.tabs.all'), icon: Layers },
+      { id: 'Catatan', label: t('repo.tabs.notes'), icon: Book },
+      { id: 'Penelitian', label: t('repo.tabs.research'), icon: Microscope },
+      { id: 'Bahasan', label: t('repo.tabs.discussion'), icon: MessageSquareQuote }
   ];
-  if (isAdmin) tabs.push({ id: 'Drafts', label: t('repo.tabs.drafts') });
+  if (isAdmin) tabs.push({ id: 'Drafts', label: t('repo.tabs.drafts'), icon: Archive });
 
   return (
     <div className="min-h-screen pt-32 px-5 md:px-8 max-w-7xl mx-auto pb-20">
@@ -287,34 +288,35 @@ export default function Repository() {
             {/* Filters & Search - Sleek Dock */}
             <div className="bg-card/80 backdrop-blur-xl border border-border/60 rounded-[2rem] md:rounded-full p-2 shadow-sm flex flex-col md:flex-row gap-3 justify-between items-center sticky top-[6.5rem] z-30 transition-all">
                 
-                {/* Segmented Control Style Tabs */}
+                {/* Segmented Control Style Tabs with Icons */}
                 <div className="flex gap-1 overflow-x-auto w-full md:w-auto no-scrollbar">
                     {tabs.map(tab => (
                         <button
                             key={tab.id}
                             onClick={() => setActiveTab(tab.id)}
                             className={cn(
-                                "px-6 py-2.5 rounded-full text-sm font-bold transition-all whitespace-nowrap",
+                                "px-5 py-2.5 rounded-full text-sm font-bold transition-all whitespace-nowrap flex items-center gap-2",
                                 activeTab === tab.id 
-                                    ? "bg-primary text-primary-foreground shadow-sm" 
+                                    ? "bg-primary text-primary-foreground shadow-md" 
                                     : "bg-transparent text-muted-foreground hover:bg-secondary hover:text-foreground"
                             )}
                         >
+                            <tab.icon size={16} className={cn(activeTab === tab.id ? "opacity-100" : "opacity-70")} />
                             {tab.label}
                         </button>
                     ))}
                 </div>
 
                 {/* Search & View Mode */}
-                <div className="flex items-center gap-2 w-full md:w-auto bg-secondary/50 rounded-full p-1.5 border border-border/50">
-                    <div className="relative w-full md:w-56 flex items-center">
+                <div className="flex items-center gap-2 w-full md:w-auto bg-secondary/50 rounded-full p-1.5 border border-border/50 focus-within:border-primary/50 focus-within:bg-secondary/80 transition-all">
+                    <div className="relative w-full md:w-64 flex items-center">
                         <Search className="absolute left-3 text-muted-foreground" size={16} />
                         <input 
                             type="text" 
                             placeholder={t('repo.search')} 
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
-                            className="w-full bg-transparent border-none py-2 pl-10 pr-8 text-sm focus:outline-none transition-all placeholder:text-muted-foreground/70"
+                            className="w-full bg-transparent border-none py-2 pl-10 pr-8 text-sm focus:outline-none focus:ring-0 transition-all placeholder:text-muted-foreground/70"
                         />
                         {searchQuery && (
                             <button 
