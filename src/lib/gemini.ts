@@ -1,6 +1,5 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
-// Initialize Gemini
 const API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
 
 export const SYSTEM_PROMPT = `
@@ -29,18 +28,13 @@ IMPORTANT:
 `;
 
 export async function generateAIResponse(prompt: string, context?: string) {
-  // 1. Validate Key
   if (!API_KEY || API_KEY.includes("YOUR_API_KEY")) {
     console.error("Gemini: Invalid API Key");
     return "AI Configuration Error: Please check the VITE_GEMINI_API_KEY in your .env file.";
   }
 
   try {
-    // 2. Initialize Client per request to ensure freshness
     const genAI = new GoogleGenerativeAI(API_KEY);
-    
-    // 3. Use 'gemini-1.5-flash' (Fast & Efficient)
-    // If this fails, you might need to enable the API in Google Cloud Console
     const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
     const fullPrompt = `
@@ -54,18 +48,37 @@ export async function generateAIResponse(prompt: string, context?: string) {
     const result = await model.generateContent(fullPrompt);
     const response = await result.response;
     return response.text();
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Gemini API Error:", error);
     
-    // Detailed Error Handling
-    if (error.message?.includes("API key")) {
-        return "Error: The provided API Key is invalid or expired.";
+    const err = error as { 
+      message?: string; 
+      status?: number; 
+      statusText?: string;
+      error?: { message?: string };
+    };
+    
+    const errorMessage = err?.message || err?.error?.message || '';
+    const status = err?.status;
+    
+    if (errorMessage.includes("API key") || status === 401 || status === 403) {
+      return "Error: The API key is invalid or expired. Please check your Gemini API key configuration.";
     }
-    if (error.message?.includes("fetch failed")) {
-        return "Network Error: Could not connect to Google AI. Please check your internet connection.";
+    
+    if (errorMessage.includes("fetch") || errorMessage.includes("network") || status === 503) {
+      return "Network Error: Could not connect to Google AI. Please check your internet connection.";
     }
-    if (error.message?.includes("candidate")) {
-        return "I apologize, but I cannot answer that specific query due to safety filters.";
+    
+    if (errorMessage.includes("quota") || status === 429) {
+      return "Rate Limit: You've reached the API quota limit. Please try again later.";
+    }
+    
+    if (errorMessage.includes("candidate") || errorMessage.includes("safety")) {
+      return "I apologize, but I cannot answer that specific query due to safety filters.";
+    }
+    
+    if (errorMessage.includes("not found") || status === 404) {
+      return "Error: The Gemini API endpoint was not found. The model may be unavailable.";
     }
     
     return "I apologize, but I am currently unable to process your request. Please try again later.";
