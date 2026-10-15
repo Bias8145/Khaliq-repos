@@ -1,19 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { LogOut, PenTool, Sun, Moon, Feather, Settings2, RefreshCw, Languages, Search, X, Bookmark } from 'lucide-react';
+import { LogOut, PenTool, Sun, Moon, Feather, Settings2, RefreshCw, Languages, Bookmark } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useTheme } from '../lib/theme';
 import { usePreferences } from '../lib/preferences';
 import { useLanguage } from '../lib/language';
 import { cn } from '../lib/utils';
-import { useKeyboardShortcuts } from '../hooks/useKeyboardShortcuts';
 import { useBookmarks } from '../hooks/useBookmarks';
 
 export default function Navbar() {
   const [showFontSettings, setShowFontSettings] = useState(false);
-  const [showSearch, setShowSearch] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
   const [user, setUser] = useState<any>(null);
   const [scrolled, setScrolled] = useState(false);
   const { theme, setTheme } = useTheme();
@@ -42,77 +39,22 @@ export default function Navbar() {
     };
   }, []);
 
-  useKeyboardShortcuts({
-    onSearch: () => setShowSearch(true),
-    onEscape: () => {
-      setShowSearch(false);
-      setShowFontSettings(false);
-    }
-  });
-
   const handleLogout = async () => {
     await supabase.auth.signOut();
     navigate('/');
   };
 
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (searchQuery.trim()) {
-      navigate(`/?search=${encodeURIComponent(searchQuery.trim())}`);
-      setShowSearch(false);
-      setSearchQuery('');
-    }
-  };
-
   return (
     <>
       <AnimatePresence>
-        {(showFontSettings || showSearch) && (
+        {showFontSettings && (
             <motion.div 
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 className="fixed inset-0 z-40 bg-background/20 backdrop-blur-sm"
-                onClick={() => {
-                  setShowFontSettings(false);
-                  setShowSearch(false);
-                }}
+                onClick={() => setShowFontSettings(false)}
             />
-        )}
-      </AnimatePresence>
-
-      <AnimatePresence>
-        {showSearch && (
-          <motion.div
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            className="fixed top-20 left-1/2 -translate-x-1/2 z-50 w-[90%] max-w-xl"
-          >
-            <form onSubmit={handleSearch} className="relative">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground" size={20} aria-hidden="true" />
-              <input
-                type="search"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search posts, research, notes..."
-                className="w-full bg-card border border-border rounded-2xl py-4 pl-12 pr-12 text-base focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all shadow-xl"
-                autoFocus
-                aria-label="Search repository"
-              />
-              <button
-                type="button"
-                onClick={() => setShowSearch(false)}
-                className="absolute right-4 top-1/2 -translate-y-1/2 p-1.5 rounded-full hover:bg-secondary transition-colors"
-                aria-label="Close search"
-              >
-                <X size={18} />
-              </button>
-            </form>
-            <p className="text-center text-xs text-muted-foreground mt-3">
-              Press <kbd className="px-1.5 py-0.5 bg-secondary rounded text-[10px] font-bold">ESC</kbd> to close
-            </p>
-          </motion.div>
         )}
       </AnimatePresence>
 
@@ -120,7 +62,7 @@ export default function Navbar() {
           "fixed left-1/2 -translate-x-1/2 z-50 transition-all duration-500 ease-out flex items-center",
           scrolled 
             ? "top-4 w-[92%] md:w-max md:min-w-[500px] bg-card/90 backdrop-blur-xl border border-border/80 shadow-sm rounded-full py-2.5 px-4" 
-            : "top-6 w-[95%] md:w-max md:min-w-[600px] bg-card/50 backdrop-blur-md border border-border/40 shadow-none rounded-full py-3.5 px-6"
+            : "top-6 w-[95%] md:w-max md:min-w-[500px] bg-card/50 backdrop-blur-md border border-border/40 shadow-none rounded-full py-3.5 px-6"
       )} role="navigation" aria-label="Main navigation">
         <div className="w-full flex items-center justify-between gap-4 md:gap-10">
           
@@ -148,15 +90,6 @@ export default function Navbar() {
                     <span className="text-xs font-bold">{bookmarkCount}</span>
                   </Link>
                 )}
-
-                <button 
-                  onClick={() => setShowSearch(true)}
-                  className="p-2.5 rounded-full bg-secondary/80 hover:bg-secondary text-muted-foreground hover:text-foreground transition-colors"
-                  aria-label="Search (Ctrl+K)"
-                  title="Search (Ctrl+K)"
-                >
-                  <Search size={18} aria-hidden="true" />
-                </button>
 
                 <div className="relative">
                     <button 
@@ -293,13 +226,6 @@ export default function Navbar() {
                  <span className="text-xs font-bold">{bookmarkCount}</span>
                </Link>
              )}
-             <button 
-                onClick={() => setShowSearch(true)}
-                className="p-2 bg-secondary/80 text-muted-foreground hover:text-foreground rounded-full transition-colors"
-                aria-label="Search"
-              >
-                <Search size={16} aria-hidden="true" />
-              </button>
              {user && (
                 <>
                     <Link 
