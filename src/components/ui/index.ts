@@ -9,7 +9,7 @@ export { EmptyState } from './EmptyState';
 export { ProgressToast } from './ProgressToast';
 export { ReadingProgress, ReadingProgressIndicator } from './ReadingProgress';
 export { ContentStats } from './ContentStats';
-export { BookmarkButton } from './BookmarkButton';
+export { BookmarkButton, BookmarkIcon } from './BookmarkButton';
 export { BookmarksList } from './BookmarksList';
 export { EnhancedTableOfContents } from './EnhancedTableOfContents';
 export { ShareButtons } from './ShareButtons';

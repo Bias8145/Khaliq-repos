@@ -23,7 +23,8 @@ import {
   BookmarksList,
   EnhancedTableOfContents,
   ShareButtons,
-  BackToTop
+  BackToTop,
+  BookmarkIcon
 } from '../components/ui';
 
 type AspectRatio = 'auto' | 'portrait' | 'square' | 'story';
@@ -379,6 +380,23 @@ export default function PostView() {
   
   const BackgroundIcon = getCategoryIcon(post?.category);
 
+  const handleBookmarkToggle = () => {
+    if (!post) return;
+    const wasBookmarked = isBookmarked(post.id);
+    toggleBookmark({
+      id: post.id,
+      title: post.title,
+      excerpt: post.excerpt,
+      category: post.category
+    });
+    
+    if (wasBookmarked) {
+      toast("Removed from bookmarks", "info");
+    } else {
+      toast("Added to bookmarks", "success");
+    }
+  };
+
   carouselRefs.current = new Array(slides.length + 2).fill(null);
 
   if (!post) return (
@@ -539,16 +557,10 @@ export default function PostView() {
                             <span>{post.likes}</span>
                         </button>
                         
-                        <BookmarkButton
+                        <BookmarkIcon
                           isBookmarked={postIsBookmarked}
-                          onToggle={() => toggleBookmark({
-                            id: post.id,
-                            title: post.title,
-                            excerpt: post.excerpt,
-                            category: post.category
-                          })}
-                          size="sm"
-                          showLabel
+                          onClick={handleBookmarkToggle}
+                          size={20}
                         />
                         
                         <div className="w-px h-6 bg-border mx-1 shrink-0" />
@@ -1017,7 +1029,7 @@ export default function PostView() {
                                             className={cn(
                                                 "w-[340px] md:w-[400px] relative flex flex-col overflow-hidden",
                                                 aspectRatio === 'square' ? "aspect-square" : 
-                                                aspectRatio === 'portrait' ? "aspect-[4/5]" : 
+                                                aspectRatio === 'portrait' ? "aspect-[4:5]" : 
                                                 aspectRatio === 'story' ? "aspect-[9:16]" : 
                                                 "min-h-[500px] h-auto",
                                                 cardTheme === 'dark' ? "bg-[#141414] text-[#E5E5E5]" : "bg-[#FAFAFA] text-[#1A1A1A]"
@@ -1053,7 +1065,7 @@ export default function PostView() {
                                         className={cn(
                                             "w-[340px] md:w-[400px] relative flex flex-col justify-center items-center text-center overflow-hidden",
                                             aspectRatio === 'square' ? "aspect-square" : 
-                                            aspectRatio === 'portrait' ? "aspect-[4/5]" : 
+                                            aspectRatio === 'portrait' ? "aspect-[4:5]" : 
                                             aspectRatio === 'story' ? "aspect-[9:16]" : 
                                             "min-h-[500px] h-auto",
                                             cardTheme === 'dark' ? "bg-[#141414] text-[#E5E5E5]" : "bg-[#FAFAFA] text-[#1A1A1A]"

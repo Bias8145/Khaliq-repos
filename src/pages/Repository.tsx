@@ -11,7 +11,7 @@ import { ConfirmDialog } from '../components/ui/ConfirmDialog';
 import { useDebounce } from '../hooks/useDebounce';
 import { useKeyboardShortcuts } from '../hooks/useKeyboardShortcuts';
 import { useBookmarks } from '../hooks/useBookmarks';
-import { PostCardSkeleton, ProfileCardSkeleton, StatsCardSkeleton, BookmarkButton, BookmarksList } from '../components/ui';
+import { PostCardSkeleton, ProfileCardSkeleton, StatsCardSkeleton, BookmarkButton, BookmarkIcon, BookmarksList } from '../components/ui';
 import { EmptyState } from '../components/ui/EmptyState';
 import { HighlightText } from '../components/ui/SearchHighlight';
 
@@ -216,6 +216,17 @@ export default function Repository() {
     }
   };
 
+  const handleBookmarkToggle = useCallback((post: { id: string; title: string; excerpt?: string; category?: string }) => {
+    const wasBookmarked = isBookmarked(post.id);
+    toggleBookmark(post);
+    
+    if (wasBookmarked) {
+      toast("Removed from bookmarks", "info");
+    } else {
+      toast("Added to bookmarks", "success");
+    }
+  }, [isBookmarked, toggleBookmark, toast]);
+
   useEffect(() => {
     let filtered = posts;
     
@@ -324,10 +335,10 @@ export default function Repository() {
                   {bookmarks.length > 0 && (
                     <button 
                       onClick={() => setShowBookmarks(true)}
-                      className="flex items-center gap-2 px-5 py-3 rounded-full bg-secondary text-foreground font-bold hover:bg-primary/10 transition-all group shadow-sm border border-border"
+                      className="flex items-center gap-2 px-5 py-3 rounded-full bg-secondary text-foreground font-bold hover:bg-amber-500/10 transition-all group shadow-sm border border-border"
                       aria-label={`View ${bookmarks.length} bookmarks`}
                     >
-                      <Bookmark size={18} className="text-primary group-hover:scale-110 transition-transform" aria-hidden="true" />
+                      <Bookmark size={18} className="text-amber-500 group-hover:scale-110 transition-transform" aria-hidden="true" />
                       <span className="text-sm">{bookmarks.length}</span>
                     </button>
                   )}
@@ -542,15 +553,15 @@ export default function Repository() {
                                                 </div>
                                                 
                                                 <div className="flex items-center gap-2">
-                                                    <BookmarkButton
+                                                    <BookmarkIcon
                                                       isBookmarked={postIsBookmarked}
-                                                      onToggle={() => toggleBookmark({
+                                                      onClick={() => handleBookmarkToggle({
                                                         id: post.id,
                                                         title: post.title,
                                                         excerpt: post.excerpt,
                                                         category: post.category
                                                       })}
-                                                      size="sm"
+                                                      size={16}
                                                     />
                                                     
                                                     <button 
