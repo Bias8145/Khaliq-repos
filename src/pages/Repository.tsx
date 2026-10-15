@@ -1,5 +1,5 @@
-import React, { useEffect, useState, useMemo } from 'react';
-import { Link } from 'react-router-dom';
+import React, { useEffect, useState, useMemo, useCallback } from 'react';
+import { Link, useSearchParams } from 'react-router-dom';
 import { supabase, type Post } from '../lib/supabase';
 import { format } from 'date-fns';
 import { Eye, EyeOff, Plus, Search, ChevronRight, Filter, Layers, Trash2, Heart, Users, MousePointerClick, TrendingUp, Archive, Pin, PinOff, User, ExternalLink, Github, Cpu, Database, Smartphone, LayoutGrid, List, Clock, X, Link as LinkIcon, Edit3, Hash, Quote, Book, Microscope, MessageSquareQuote } from 'lucide-react';
@@ -8,42 +8,63 @@ import { cn, calculateReadingTime } from '../lib/utils';
 import { useToast } from '../components/ui/Toast';
 import { useLanguage } from '../lib/language';
 import { ConfirmDialog } from '../components/ui/ConfirmDialog';
+import { useDebounce } from '../hooks/useDebounce';
+import { useKeyboardShortcuts } from '../hooks/useKeyboardShortcuts';
+import { PostCardSkeleton, PostGridSkeleton, ProfileCardSkeleton, StatsCardSkeleton } from '../components/ui/Skeleton';
+import { EmptyState } from '../components/ui/EmptyState';
+import { HighlightText } from '../components/ui/SearchHighlight';
 
 export default function Repository() {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const initialSearch = searchParams.get('search') || '';
+  
   const [posts, setPosts] = useState<Post[]>([]);
   const [filteredPosts, setFilteredPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState(initialSearch);
   const [isAdmin, setIsAdmin] = useState(false);
   const [activeTab, setActiveTab] = useState('All');
   const [viewMode, setViewMode] = useState<'list' | 'grid'>('list');
-  
-  // State for Accordion (Expanded Panels)
   const [expandedPosts, setExpandedPosts] = useState<Set<string>>(new Set());
-  
-  // Analytics State
   const [siteVisits, setSiteVisits] = useState(0);
   const [totalViews, setTotalViews] = useState(0);
   const [totalLikes, setTotalLikes] = useState(0);
-
-  // Delete Dialog State
   const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [searchInputFocused, setSearchInputFocused] = useState(false);
 
   const { toast } = useToast();
   const { t } = useLanguage();
+  
+  const debouncedSearchQuery = useDebounce(searchQuery, 300);
+
+  useKeyboardShortcuts({
+    onSearch: () => {
+      const input = document.getElementById('search-input');
+      input?.focus();
+    }
+  });
 
   useEffect(() => {
     checkUser();
     fetchPosts();
     fetchAnalytics();
     
-    // Read URL params for initial tab
     const params = new URLSearchParams(window.location.search);
     const tabParam = params.get('tab');
     if (tabParam) {
         setActiveTab(tabParam);
     }
   }, []);
+
+  useEffect(() => {
+    if (debouncedSearchQuery !== initialSearch) {
+      if (debouncedSearchQuery) {
+        setSearchParams({ search: debouncedSearchQuery });
+      } else {
+        setSearchParams({});
+      }
+    }
+  }, [debouncedSearchQuery, initialSearch, setSearchParams]);
 
   const checkUser = async () => {
     const { data: { user } } = await supabase.auth.getUser();
@@ -86,12 +107,12 @@ export default function Repository() {
       }
     } catch (error) {
       console.error("Error fetching posts:", error);
+      toast("Failed to load posts", "error");
     } finally {
       setLoading(false);
     }
   };
 
-  // Extract unique subcategories for the "Topics" cloud
   const uniqueTopics = useMemo(() => {
     const topics = new Set<string>();
     posts.forEach(post => {
@@ -99,29 +120,28 @@ export default function Repository() {
             topics.add(post.subcategory);
         }
     });
-    return Array.from(topics).slice(0, 8); // Top 8 topics
+    return Array.from(topics).slice(0, 8);
   }, [posts]);
 
-  // Toggle Accordion Panel
-  const toggleExpand = (id: string) => {
-      const newSet = new Set(expandedPosts);
-      if (newSet.has(id)) {
-          newSet.delete(id);
-      } else {
-          newSet.add(id);
-      }
-      setExpandedPosts(newSet);
-  };
+  const toggleExpand = useCallback((id: string) => {
+      setExpandedPosts(prev => {
+        const newSet = new Set(prev);
+        if (newSet.has(id)) {
+            newSet.delete(id);
+        } else {
+            newSet.add(id);
+        }
+        return newSet;
+      });
+  }, []);
 
-  // Quick Copy Link
-  const handleCopyLink = (e: React.MouseEvent, id: string) => {
+  const handleCopyLink = useCallback((e: React.MouseEvent, id: string) => {
       e.stopPropagation();
       const url = `${window.location.origin}/post/${id}`;
       navigator.clipboard.writeText(url);
       toast(t('post.linkCopied'), "success");
-  };
+  }, [toast, t]);
 
-  // Admin Actions
   const confirmDelete = (e: React.MouseEvent, id: string) => {
     e.stopPropagation();
     setDeleteId(id);
@@ -206,8 +226,8 @@ export default function Repository() {
         filtered = filtered.filter(p => p.category === activeTab || p.subcategory === activeTab);
     }
 
-    if (searchQuery) {
-      const lowerQuery = searchQuery.toLowerCase();
+    if (debouncedSearchQuery) {
+      const lowerQuery = debouncedSearchQuery.toLowerCase();
       filtered = filtered.filter(post => 
         post.title.toLowerCase().includes(lowerQuery) || 
         post.excerpt?.toLowerCase().includes(lowerQuery) ||
@@ -216,7 +236,7 @@ export default function Repository() {
       );
     }
     setFilteredPosts(filtered);
-  }, [searchQuery, posts, isAdmin, loading, activeTab]);
+  }, [debouncedSearchQuery, posts, isAdmin, loading, activeTab]);
 
   const stats = {
     total: posts.length,
@@ -225,18 +245,6 @@ export default function Repository() {
     research: posts.filter(p => p.category === 'Penelitian').length,
   };
 
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-pulse flex flex-col items-center gap-4">
-            <div className="h-12 w-12 bg-primary/20 rounded-full"></div>
-            <div className="h-4 w-32 bg-secondary rounded-full"></div>
-        </div>
-      </div>
-    );
-  }
-
-  // Tabs Configuration with Icons
   const tabs = [
       { id: 'All', label: t('repo.tabs.all'), icon: Layers },
       { id: 'Catatan', label: t('repo.tabs.notes'), icon: Book },
@@ -244,6 +252,31 @@ export default function Repository() {
       { id: 'Bahasan', label: t('repo.tabs.discussion'), icon: MessageSquareQuote }
   ];
   if (isAdmin) tabs.push({ id: 'Drafts', label: t('repo.tabs.drafts'), icon: Archive });
+
+  if (loading) {
+    return (
+      <div className="min-h-screen pt-32 px-5 md:px-8 max-w-7xl mx-auto pb-20">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+          <div className="lg:col-span-8 space-y-8">
+            <div className="animate-pulse space-y-4">
+              <div className="h-6 w-40 bg-secondary rounded-full"></div>
+              <div className="h-10 w-64 bg-secondary rounded-lg"></div>
+              <div className="h-4 w-80 bg-secondary rounded"></div>
+            </div>
+            <div className="space-y-4">
+              {[1, 2, 3].map(i => (
+                <PostCardSkeleton key={i} />
+              ))}
+            </div>
+          </div>
+          <div className="lg:col-span-4 space-y-6">
+            <ProfileCardSkeleton />
+            <StatsCardSkeleton />
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen pt-32 px-5 md:px-8 max-w-7xl mx-auto pb-20">
@@ -259,14 +292,12 @@ export default function Repository() {
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
         
-        {/* Main Content Area (Left) */}
         <div className="lg:col-span-8 flex flex-col gap-8">
             
-            {/* Header Section */}
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
                 <div>
                     <div className="inline-flex items-center gap-3 px-4 py-1.5 mb-4 rounded-full bg-secondary text-foreground text-[10px] font-bold tracking-[0.2em] uppercase border border-border/50">
-                        <span className="w-2 h-2 rounded-full bg-primary"></span>
+                        <span className="w-2 h-2 rounded-full bg-primary" aria-hidden="true"></span>
                         {t('nav.digitalGarden')}
                     </div>
                     <h1 className="text-3xl md:text-5xl font-serif font-bold text-foreground mb-3 tracking-tight">
@@ -279,17 +310,15 @@ export default function Repository() {
                 
                 {isAdmin && (
                     <Link to="/editor/new" className="flex items-center gap-2 px-6 py-4 rounded-full bg-primary text-primary-foreground font-bold hover:opacity-90 transition-all group shrink-0 shadow-sm">
-                        <Plus size={20} className="group-hover:rotate-90 transition-transform" /> 
+                        <Plus size={20} className="group-hover:rotate-90 transition-transform" aria-hidden="true" /> 
                         {t('repo.newEntry')}
                     </Link>
                 )}
             </div>
 
-            {/* Filters & Search - Sleek Dock */}
             <div className="bg-card/80 backdrop-blur-xl border border-border/60 rounded-[2rem] md:rounded-full p-2 shadow-sm flex flex-col md:flex-row gap-3 justify-between items-center sticky top-[6.5rem] z-30 transition-all">
                 
-                {/* Segmented Control Style Tabs with Icons */}
-                <div className="flex gap-1 overflow-x-auto w-full md:w-auto no-scrollbar">
+                <div className="flex gap-1 overflow-x-auto w-full md:w-auto no-scrollbar" role="tablist" aria-label="Category filters">
                     {tabs.map(tab => (
                         <button
                             key={tab.id}
@@ -300,62 +329,78 @@ export default function Repository() {
                                     ? "bg-primary text-primary-foreground shadow-md" 
                                     : "bg-transparent text-muted-foreground hover:bg-secondary hover:text-foreground"
                             )}
+                            role="tab"
+                            aria-selected={activeTab === tab.id}
+                            aria-controls={`${tab.id}-panel`}
                         >
-                            <tab.icon size={16} className={cn(activeTab === tab.id ? "opacity-100" : "opacity-70")} />
+                            <tab.icon size={16} className={cn(activeTab === tab.id ? "opacity-100" : "opacity-70")} aria-hidden="true" />
                             {tab.label}
                         </button>
                     ))}
                 </div>
 
-                {/* Search & View Mode */}
-                <div className="flex items-center gap-2 w-full md:w-auto bg-secondary/50 rounded-full p-1.5 border border-border/50 focus-within:border-primary/50 focus-within:bg-secondary/80 transition-all">
+                <div className={cn(
+                  "flex items-center gap-2 w-full md:w-auto bg-secondary/50 rounded-full p-1.5 border border-border/50 transition-all",
+                  searchInputFocused && "border-primary/50 bg-secondary/80"
+                )}>
                     <div className="relative w-full md:w-64 flex items-center">
-                        <Search className="absolute left-3 text-muted-foreground" size={16} />
+                        <Search className="absolute left-3 text-muted-foreground" size={16} aria-hidden="true" />
                         <input 
-                            type="text" 
+                            id="search-input"
+                            type="search" 
                             placeholder={t('repo.search')} 
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
+                            onFocus={() => setSearchInputFocused(true)}
+                            onBlur={() => setSearchInputFocused(false)}
                             className="w-full bg-transparent border-none py-2 pl-10 pr-8 text-sm focus:outline-none focus:ring-0 transition-all placeholder:text-muted-foreground/70"
+                            aria-label="Search posts"
                         />
                         {searchQuery && (
                             <button 
                                 onClick={() => setSearchQuery('')}
                                 className="absolute right-2 p-1 rounded-full hover:bg-border text-muted-foreground transition-colors"
+                                aria-label="Clear search"
                             >
-                                <X size={14} />
+                                <X size={14} aria-hidden="true" />
                             </button>
                         )}
                     </div>
-                    <div className="w-px h-5 bg-border/80 mx-1 hidden md:block"></div>
-                    <div className="hidden md:flex gap-1 pr-1">
+                    <div className="w-px h-5 bg-border/80 mx-1 hidden md:block" aria-hidden="true"></div>
+                    <div className="hidden md:flex gap-1 pr-1" role="group" aria-label="View mode">
                         <button 
                             onClick={() => setViewMode('list')} 
                             className={cn("p-2 rounded-full transition-colors", viewMode === 'list' ? "bg-card shadow-sm text-primary" : "text-muted-foreground hover:text-foreground")}
+                            aria-label="List view"
+                            aria-pressed={viewMode === 'list'}
                         >
-                            <List size={16} />
+                            <List size={16} aria-hidden="true" />
                         </button>
                         <button 
                             onClick={() => setViewMode('grid')} 
                             className={cn("p-2 rounded-full transition-colors", viewMode === 'grid' ? "bg-card shadow-sm text-primary" : "text-muted-foreground hover:text-foreground")}
+                            aria-label="Grid view"
+                            aria-pressed={viewMode === 'grid'}
                         >
-                            <LayoutGrid size={16} />
+                            <LayoutGrid size={16} aria-hidden="true" />
                         </button>
                     </div>
                 </div>
             </div>
 
-            {/* Posts List / Grid */}
-            <div className={cn(
-                viewMode === 'grid' ? "grid grid-cols-1 md:grid-cols-2 gap-5" : "space-y-4"
-            )}>
-                <AnimatePresence>
+            <div 
+              className={cn(viewMode === 'grid' ? "grid grid-cols-1 md:grid-cols-2 gap-5" : "space-y-4")}
+              role="tabpanel"
+              aria-label={`${activeTab} posts`}
+              id={`${activeTab}-panel`}
+            >
+                <AnimatePresence mode="popLayout">
                     {filteredPosts.map((post, index) => {
                         const isExpanded = expandedPosts.has(post.id);
                         const readTime = calculateReadingTime(post.content);
 
                         return (
-                        <motion.div
+                        <motion.article
                             key={post.id}
                             layout
                             initial={{ opacity: 0, y: 10 }}
@@ -375,12 +420,11 @@ export default function Repository() {
                                 </div>
                             )}
 
-                            {/* Header: Tags & Date + Aesthetic Expand Icon */}
                             <div className={cn("flex flex-col md:flex-row md:items-center justify-between gap-4 relative z-10", viewMode === 'grid' && "mb-5")}>
                                 <div className="flex flex-wrap items-center gap-2">
                                     {post.is_pinned && (
                                         <span className="flex items-center gap-1.5 px-3 py-1 bg-primary/10 border border-primary/20 rounded-full text-[10px] font-bold text-primary uppercase tracking-wider">
-                                            <Pin size={12} className="fill-current" /> Pinned
+                                            <Pin size={12} className="fill-current" aria-hidden="true" /> Pinned
                                         </span>
                                     )}
                                     <span className={cn(
@@ -400,53 +444,48 @@ export default function Repository() {
                                 </div>
                                 
                                 <div className="flex items-center gap-4">
-                                    <span className="text-[10px] text-muted-foreground font-mono uppercase tracking-wider flex items-center gap-1">
-                                        <Clock size={12} /> {format(new Date(post.created_at), 'MMM d, yyyy')}
-                                    </span>
+                                    <time className="text-[10px] text-muted-foreground font-mono uppercase tracking-wider flex items-center gap-1" dateTime={post.created_at}>
+                                        <Clock size={12} aria-hidden="true" /> {format(new Date(post.created_at), 'MMM d, yyyy')}
+                                    </time>
                                     
-                                    {/* Aesthetic Plus/Cross Expand Indicator */}
                                     {viewMode === 'list' && (
                                         <div className={cn(
                                             "w-7 h-7 rounded-full flex items-center justify-center transition-all duration-500 shrink-0 border",
                                             isExpanded 
                                                 ? "bg-primary text-primary-foreground border-primary rotate-45 shadow-sm" 
                                                 : "bg-secondary text-muted-foreground border-transparent group-hover:bg-primary/10 group-hover:text-primary"
-                                        )}>
+                                        )} aria-hidden="true">
                                             <Plus size={14} strokeWidth={3} />
                                         </div>
                                     )}
                                 </div>
                             </div>
 
-                            {/* Title - Clickable to go to post */}
                             <Link 
                                 to={`/post/${post.id}`} 
                                 onClick={(e) => e.stopPropagation()} 
                                 className={cn("block mt-4 relative z-10", viewMode === 'grid' && "flex-grow")}
                             >
-                                <h3 className="text-xl md:text-2xl font-serif font-bold text-foreground hover:text-primary transition-colors leading-tight pr-8">
-                                    {post.title}
-                                </h3>
+                                <h2 className="text-xl md:text-2xl font-serif font-bold text-foreground hover:text-primary transition-colors leading-tight pr-8">
+                                    <HighlightText text={post.title} query={debouncedSearchQuery} />
+                                </h2>
                             </Link>
 
-                            {/* Redesigned Pin Note (Soft Pastel Box) */}
                             {post.is_pinned && post.summary && (
                                 <div className="mt-4 mb-2 bg-primary/5 border border-primary/10 rounded-2xl p-4 flex items-start gap-3 relative z-10">
-                                    <Quote size={16} className="text-primary mt-0.5 shrink-0" />
+                                    <Quote size={16} className="text-primary mt-0.5 shrink-0" aria-hidden="true" />
                                     <p className="text-sm text-foreground/80 italic font-medium leading-relaxed">
                                         {post.summary}
                                     </p>
                                 </div>
                             )}
 
-                            {/* Excerpt for Grid View */}
                             {viewMode === 'grid' && (
                                 <p className="text-muted-foreground text-sm line-clamp-2 leading-relaxed mt-3 relative z-10">
-                                    {post.excerpt || post.content.substring(0, 150) + "..."}
+                                    <HighlightText text={post.excerpt || post.content.substring(0, 150) + "..."} query={debouncedSearchQuery} />
                                 </p>
                             )}
 
-                            {/* Expandable Body (List View) or Static Footer (Grid View) */}
                             <AnimatePresence>
                                 {(isExpanded || viewMode === 'grid') && (
                                     <motion.div
@@ -459,31 +498,31 @@ export default function Repository() {
                                             
                                             {viewMode === 'list' && (
                                                 <p className="text-muted-foreground text-sm leading-relaxed">
-                                                    {post.excerpt || post.content.substring(0, 200) + "..."}
+                                                    <HighlightText text={post.excerpt || post.content.substring(0, 200) + "..."} query={debouncedSearchQuery} />
                                                 </p>
                                             )}
 
                                             <div className="flex items-center justify-between w-full flex-wrap gap-4">
-                                                <div className="flex items-center gap-3 text-muted-foreground">
+                                                <div className="flex items-center gap-3 text-muted-foreground" aria-label="Post statistics">
                                                     <span className="flex items-center gap-1.5 text-xs font-medium bg-secondary px-3 py-1.5 rounded-full" title="Views">
-                                                        <Eye size={14} /> {post.view_count || 0}
+                                                        <Eye size={14} aria-hidden="true" /> {post.view_count || 0}
                                                     </span>
                                                     <span className="flex items-center gap-1.5 text-xs font-medium bg-secondary px-3 py-1.5 rounded-full" title="Likes">
-                                                        <Heart size={14} /> {post.likes || 0}
+                                                        <Heart size={14} aria-hidden="true" /> {post.likes || 0}
                                                     </span>
                                                     <span className="flex items-center gap-1.5 text-xs font-medium bg-secondary px-3 py-1.5 rounded-full" title="Est. Read Time">
-                                                        <Clock size={14} /> {readTime} min
+                                                        <Clock size={14} aria-hidden="true" /> {readTime} min
                                                     </span>
                                                 </div>
                                                 
                                                 <div className="flex items-center gap-2">
-                                                    {/* Quick Copy Link Button */}
                                                     <button 
                                                         onClick={(e) => handleCopyLink(e, post.id)}
                                                         className="p-2 rounded-full bg-secondary text-muted-foreground hover:bg-primary/10 hover:text-primary transition-colors"
                                                         title={t('post.copyLink')}
+                                                        aria-label={t('post.copyLink')}
                                                     >
-                                                        <LinkIcon size={14} />
+                                                        <LinkIcon size={14} aria-hidden="true" />
                                                     </button>
 
                                                     {isAdmin && (
@@ -493,29 +532,33 @@ export default function Repository() {
                                                                 onClick={(e) => e.stopPropagation()}
                                                                 className="p-2 rounded-full hover:bg-secondary transition-colors text-muted-foreground hover:text-primary"
                                                                 title="Edit Post"
+                                                                aria-label="Edit post"
                                                             >
-                                                                <Edit3 size={14} />
+                                                                <Edit3 size={14} aria-hidden="true" />
                                                             </Link>
                                                             <button 
                                                                 onClick={(e) => togglePin(e, post)}
                                                                 className={cn("p-2 rounded-full hover:bg-secondary transition-colors", post.is_pinned ? "text-primary bg-primary/10" : "text-muted-foreground")}
                                                                 title={post.is_pinned ? t('repo.unpin') : t('repo.pin')}
+                                                                aria-label={post.is_pinned ? 'Unpin post' : 'Pin post'}
                                                             >
-                                                                {post.is_pinned ? <PinOff size={14} /> : <Pin size={14} />}
+                                                                {post.is_pinned ? <PinOff size={14} aria-hidden="true" /> : <Pin size={14} aria-hidden="true" />}
                                                             </button>
                                                             <button 
                                                                 onClick={(e) => toggleVisibility(e, post)}
                                                                 className={cn("p-2 rounded-full hover:bg-secondary transition-colors", post.is_public ? "text-emerald-500 bg-emerald-500/10" : "text-orange-500 bg-orange-500/10")}
                                                                 title={post.is_public ? t('repo.makePrivate') : t('repo.makePublic')}
+                                                                aria-label={post.is_public ? 'Make private' : 'Make public'}
                                                             >
-                                                                {post.is_public ? <Eye size={14} /> : <EyeOff size={14} />}
+                                                                {post.is_public ? <Eye size={14} aria-hidden="true" /> : <EyeOff size={14} aria-hidden="true" />}
                                                             </button>
                                                             <button 
                                                                 onClick={(e) => confirmDelete(e, post.id)}
                                                                 className="p-2 rounded-full hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors"
                                                                 title={t('repo.delete')}
+                                                                aria-label="Delete post"
                                                             >
-                                                                <Trash2 size={14} />
+                                                                <Trash2 size={14} aria-hidden="true" />
                                                             </button>
                                                         </div>
                                                     )}
@@ -525,7 +568,7 @@ export default function Repository() {
                                                         onClick={(e) => e.stopPropagation()}
                                                         className="inline-flex items-center gap-2 text-xs font-bold text-primary bg-primary/10 hover:bg-primary hover:text-primary-foreground px-4 py-2 rounded-full transition-colors"
                                                     >
-                                                        Read Full <ChevronRight size={14} />
+                                                        Read Full <ChevronRight size={14} aria-hidden="true" />
                                                     </Link>
                                                 </div>
                                             </div>
@@ -533,40 +576,41 @@ export default function Repository() {
                                     </motion.div>
                                 )}
                             </AnimatePresence>
-                        </motion.div>
+                        </motion.article>
                         );
                     })}
                 </AnimatePresence>
 
                 {filteredPosts.length === 0 && (
-                    <div className="col-span-full text-center py-24 text-muted-foreground bg-secondary rounded-[2.5rem] border border-border">
-                        <div className="w-16 h-16 bg-card rounded-full flex items-center justify-center mx-auto mb-4 text-muted-foreground border border-border">
-                            <Filter size={24} />
-                        </div>
-                        <p className="font-medium">{t('repo.noEntries')}</p>
-                        {isAdmin && (
-                            <Link to="/editor/new" className="text-primary text-sm font-bold mt-2 inline-block hover:underline">
-                                {t('repo.newEntry')}
-                            </Link>
-                        )}
+                    <div className="col-span-full">
+                        <EmptyState 
+                            icon={Filter}
+                            title={t('repo.noEntries')}
+                            description="Try adjusting your search or filter criteria"
+                            action={
+                                isAdmin ? (
+                                    <Link to="/editor/new" className="text-primary text-sm font-bold hover:underline">
+                                        {t('repo.newEntry')}
+                                    </Link>
+                                ) : undefined
+                            }
+                        />
                     </div>
                 )}
             </div>
         </div>
 
-        {/* Sidebar (Right) */}
-        <div className="lg:col-span-4 space-y-6">
+        <aside className="lg:col-span-4 space-y-6" aria-label="Sidebar">
             
-            {/* Profile Card */}
-            <div className="bg-card border border-border rounded-[2.5rem] p-8 relative overflow-hidden group hover:border-primary/50 transition-colors shadow-sm">
-                <div className="absolute top-0 right-0 p-6 opacity-5 group-hover:opacity-10 transition-opacity pointer-events-none">
+            <article className="bg-card border border-border rounded-[2.5rem] p-8 relative overflow-hidden group hover:border-primary/50 transition-colors shadow-sm">
+                <div className="absolute top-0 right-0 p-6 opacity-5 group-hover:opacity-10 transition-opacity pointer-events-none" aria-hidden="true">
                     <User size={120} />
                 </div>
                 
                 <div className="relative z-10">
                     <div className="flex items-center gap-4 mb-6">
                         <div className="w-16 h-16 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center text-primary">
-                            <User size={28} />
+                            <User size={28} aria-hidden="true" />
                         </div>
                         <div>
                             <h3 className="text-xl font-bold text-foreground leading-tight">Bias Fajar Khaliq</h3>
@@ -579,27 +623,26 @@ export default function Repository() {
                     </p>
 
                     <div className="flex flex-wrap gap-2 mb-8">
-                        <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-secondary text-[10px] font-bold text-foreground"><Cpu size={12} /> AutoCAD</span>
-                        <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-secondary text-[10px] font-bold text-foreground"><Database size={12} /> Data Analysis</span>
-                        <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-secondary text-[10px] font-bold text-foreground"><Smartphone size={12} /> Android Dev</span>
+                        <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-secondary text-[10px] font-bold text-foreground"><Cpu size={12} aria-hidden="true" /> AutoCAD</span>
+                        <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-secondary text-[10px] font-bold text-foreground"><Database size={12} aria-hidden="true" /> Data Analysis</span>
+                        <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-secondary text-[10px] font-bold text-foreground"><Smartphone size={12} aria-hidden="true" /> Android Dev</span>
                     </div>
 
                     <div className="flex gap-3 pt-6 border-t border-border">
                         <a href="https://xdaforums.com/m/khaliq-morpheus.13212421/" target="_blank" rel="noreferrer" className="flex-1 inline-flex justify-center items-center gap-2 text-xs font-bold text-foreground bg-secondary py-3 rounded-full hover:bg-primary hover:text-primary-foreground transition-colors border border-transparent">
-                            XDA Profile <ExternalLink size={12} />
+                            XDA Profile <ExternalLink size={12} aria-hidden="true" />
                         </a>
                         <a href="https://github.com/Bias8145" target="_blank" rel="noreferrer" className="flex-1 inline-flex justify-center items-center gap-2 text-xs font-bold text-foreground bg-secondary py-3 rounded-full hover:bg-primary hover:text-primary-foreground transition-colors border border-transparent">
-                            GitHub <Github size={12} />
+                            GitHub <Github size={12} aria-hidden="true" />
                         </a>
                     </div>
                 </div>
-            </div>
+            </article>
 
-            {/* Topics/Tags Cloud (New Visitor Feature) */}
             {uniqueTopics.length > 0 && (
-                <div className="bg-card border border-border rounded-[2.5rem] p-8 shadow-sm">
+                <nav className="bg-card border border-border rounded-[2.5rem] p-8 shadow-sm" aria-label="Popular topics">
                     <h3 className="text-sm font-bold text-foreground uppercase tracking-wider mb-6 flex items-center gap-2">
-                        <Hash size={18} className="text-primary" /> Popular Topics
+                        <Hash size={18} className="text-primary" aria-hidden="true" /> Popular Topics
                     </h3>
                     <div className="flex flex-wrap gap-2">
                         {uniqueTopics.map(topic => (
@@ -617,13 +660,12 @@ export default function Repository() {
                             </button>
                         ))}
                     </div>
-                </div>
+                </nav>
             )}
 
-            {/* Public Stats Overview */}
-            <div className="bg-card border border-border rounded-[2.5rem] p-8 shadow-sm">
+            <section className="bg-card border border-border rounded-[2.5rem] p-8 shadow-sm" aria-label="Repository statistics">
                 <h3 className="text-sm font-bold text-foreground uppercase tracking-wider mb-6 flex items-center gap-2">
-                    <TrendingUp size={18} className="text-primary" /> Repository Stats
+                    <TrendingUp size={18} className="text-primary" aria-hidden="true" /> Repository Stats
                 </h3>
                 <div className="grid grid-cols-2 gap-4">
                     <div className="bg-secondary p-5 rounded-[1.5rem] border border-border">
@@ -643,28 +685,27 @@ export default function Repository() {
                         <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mt-2">Appreciations</p>
                     </div>
                 </div>
-            </div>
+            </section>
 
-            {/* Admin Extra Stats */}
             {isAdmin && (
-                <div className="bg-primary/10 border border-primary/20 rounded-[2.5rem] p-8 shadow-sm">
+                <section className="bg-primary/10 border border-primary/20 rounded-[2.5rem] p-8 shadow-sm" aria-label="Admin overview">
                     <h3 className="text-sm font-bold text-primary uppercase tracking-wider mb-6 flex items-center gap-2">
-                        <Layers size={18} /> Admin Overview
+                        <Layers size={18} aria-hidden="true" /> Admin Overview
                     </h3>
                     <div className="space-y-4">
                         <div className="flex items-center justify-between bg-card/80 backdrop-blur-sm p-4 rounded-2xl border border-border/50 shadow-sm">
                             <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Drafts</span>
-                            <span className="text-lg font-bold text-orange-500">{stats.drafts}</span>
+                            <span className="text-lg font-bold text-orange-500" aria-live="polite">{stats.drafts}</span>
                         </div>
                         <div className="flex items-center justify-between bg-card/80 backdrop-blur-sm p-4 rounded-2xl border border-border/50 shadow-sm">
                             <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Visitors Today</span>
-                            <span className="text-lg font-bold text-blue-500">{siteVisits}</span>
+                            <span className="text-lg font-bold text-blue-500" aria-live="polite">{siteVisits}</span>
                         </div>
                     </div>
-                </div>
+                </section>
             )}
             
-        </div>
+        </aside>
       </div>
     </div>
   );
