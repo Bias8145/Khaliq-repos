@@ -9,7 +9,6 @@ import { useLanguage } from '../lib/language';
 import { ConfirmDialog } from '../components/ui/ConfirmDialog';
 import { motion, AnimatePresence } from 'framer-motion';
 
-// Predefined lists for suggestions
 const CATEGORY_SUGGESTIONS = ["Catatan", "Penelitian", "Bahasan", "Jurnal", "Proyek"];
 const SUBCATEGORY_SUGGESTIONS = ["Agama", "Sains", "Filsafat", "Teknologi", "Umum", "Android", "Water Treatment", "HSE"];
 
@@ -21,19 +20,17 @@ export default function Editor() {
   const [loading, setLoading] = useState(false);
   const [isPreview, setIsPreview] = useState(false);
   
-  // Form State
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
   const [excerpt, setExcerpt] = useState('');
-  const [summary, setSummary] = useState(''); // Used for Pinned Note
+  const [summary, setSummary] = useState('');
   const [category, setCategory] = useState('Catatan');
   const [subcategory, setSubcategory] = useState('');
   const [status, setStatus] = useState<'published' | 'draft'>('published');
-  const [isPublic, setIsPublic] = useState(true); // Default to public
+  const [isPublic, setIsPublic] = useState(true);
   const [isPinned, setIsPinned] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
 
-  // Dialog States
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [showSaveDialog, setShowSaveDialog] = useState(false);
   const [pendingSaveStatus, setPendingSaveStatus] = useState<'published' | 'draft' | null>(null);
@@ -94,7 +91,7 @@ export default function Editor() {
       title,
       content,
       excerpt,
-      summary: isPinned ? summary : null, // Only save summary if pinned
+      summary: isPinned ? summary : null,
       status: finalStatus,
       is_public: isPublic, 
       is_pinned: isPinned,
@@ -119,7 +116,7 @@ export default function Editor() {
         toast(finalStatus === 'draft' ? "Draft saved successfully" : "Post published successfully", "success");
         
         if (finalStatus === 'published') {
-            setTimeout(() => navigate('/repo'), 1000);
+            setTimeout(() => navigate('/'), 1000);
         }
     } catch (err: any) {
         console.error("Save Error:", err);
@@ -140,7 +137,7 @@ export default function Editor() {
         const { error } = await supabase.from('posts').delete().eq('id', id);
         if (error) throw error;
         toast("Post deleted successfully", "success");
-        navigate('/repo');
+        navigate('/');
     } catch (err: any) {
         toast(`Failed to delete: ${err.message}`, "error");
         setLoading(false);
@@ -183,7 +180,6 @@ export default function Editor() {
   return (
     <div className="min-h-screen pt-28 px-5 md:px-8 max-w-5xl mx-auto pb-32">
       
-      {/* Delete Confirmation */}
       <ConfirmDialog 
         isOpen={showDeleteDialog}
         title={t('editor.deleteConfirmTitle')}
@@ -194,7 +190,6 @@ export default function Editor() {
         onCancel={() => setShowDeleteDialog(false)}
       />
 
-      {/* Save Confirmation */}
       <ConfirmDialog 
         isOpen={showSaveDialog}
         title={t('editor.saveConfirmTitle')}
@@ -206,9 +201,8 @@ export default function Editor() {
         onCancel={() => setShowSaveDialog(false)}
       />
 
-      {/* Top Bar */}
       <div className="flex justify-between items-center mb-8 sticky top-[5.5rem] z-20 bg-background py-4 border-b border-border">
-        <Link to="/repo" className="text-muted-foreground hover:text-foreground flex items-center gap-2 text-xs font-bold uppercase tracking-wider transition-colors group">
+        <Link to="/" className="text-muted-foreground hover:text-foreground flex items-center gap-2 text-xs font-bold uppercase tracking-wider transition-colors group">
           <ArrowLeft size={14} className="group-hover:-translate-x-1 transition-transform" /> {t('editor.back')}
         </Link>
         <div className="flex items-center gap-2">
@@ -240,7 +234,6 @@ export default function Editor() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         
-        {/* Main Editor Column */}
         <div className="lg:col-span-2 space-y-6">
             <input
                 type="text"
@@ -251,7 +244,6 @@ export default function Editor() {
             />
 
             <div className="border border-border rounded-[2rem] bg-card overflow-hidden shadow-sm focus-within:border-primary transition-all min-h-[500px]">
-                {/* Toolbar - Only show in Edit mode */}
                 {!isPreview && (
                     <div className="flex items-center gap-1 p-2 border-b border-border bg-secondary overflow-x-auto sticky top-0 z-10">
                         <button onClick={() => insertFormat('h1')} className="p-2 hover:bg-card rounded-md text-muted-foreground hover:text-foreground font-bold text-[10px]" title="Heading 1">H1</button>
@@ -281,14 +273,12 @@ export default function Editor() {
             </div>
         </div>
 
-        {/* Sidebar Settings */}
         <div className="space-y-6">
             <div className="bg-card border border-border rounded-[2rem] p-6 shadow-sm space-y-6 sticky top-36">
                 <h3 className="font-bold text-foreground text-sm flex items-center gap-2 border-b border-border pb-4">
                     <Layout size={16} className="text-primary" /> {t('editor.settings')}
                 </h3>
 
-                {/* Status & Visibility Control */}
                 <div className="space-y-4">
                     <div className="space-y-2">
                         <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider flex items-center gap-2">
@@ -320,7 +310,6 @@ export default function Editor() {
                         </div>
                     </div>
 
-                    {/* Pin Toggle & Note */}
                     <div className="space-y-4 pt-4 border-t border-border">
                          <div className="flex items-center justify-between">
                             <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider flex items-center gap-2">
@@ -343,7 +332,6 @@ export default function Editor() {
                             {t('editor.pinnedDesc')}
                          </p>
 
-                         {/* Pinned Note Input (Animated) */}
                          <AnimatePresence>
                              {isPinned && (
                                  <motion.div
@@ -366,7 +354,6 @@ export default function Editor() {
                     </div>
                 </div>
 
-                {/* Classification */}
                 <div className="space-y-4 pt-4 border-t border-border">
                     <div className="space-y-2">
                         <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">{t('editor.category')}</label>
@@ -433,7 +420,6 @@ export default function Editor() {
                     </div>
                 </div>
 
-                {/* Excerpt */}
                 <div className="space-y-2">
                     <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">{t('editor.excerpt')}</label>
                     <textarea
@@ -445,7 +431,6 @@ export default function Editor() {
                     />
                 </div>
 
-                {/* Danger Zone */}
                 {id && id !== 'new' && (
                     <div className="pt-6 mt-6 border-t border-border">
                         <button 

@@ -2,7 +2,7 @@ import React, { useEffect, useState, useMemo, useCallback } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { supabase, type Post } from '../lib/supabase';
 import { format } from 'date-fns';
-import { Eye, EyeOff, Plus, Search, ChevronRight, Filter, Layers, Trash2, Heart, Users, MousePointerClick, TrendingUp, Archive, Pin, PinOff, User, ExternalLink, Github, Cpu, Database, Smartphone, LayoutGrid, List, Clock, X, Link as LinkIcon, Edit3, Hash, Quote, Book, Microscope, MessageSquareQuote } from 'lucide-react';
+import { Eye, EyeOff, Plus, Search, ChevronRight, Filter, Layers, Trash2, Heart, TrendingUp, Archive, Pin, PinOff, User, ExternalLink, Github, Cpu, Database, Smartphone, LayoutGrid, List, Clock, X, Link as LinkIcon, Edit3, Hash, Quote, Book, Microscope, MessageSquareQuote, Bookmark } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn, calculateReadingTime } from '../lib/utils';
 import { useToast } from '../components/ui/Toast';
@@ -10,7 +10,8 @@ import { useLanguage } from '../lib/language';
 import { ConfirmDialog } from '../components/ui/ConfirmDialog';
 import { useDebounce } from '../hooks/useDebounce';
 import { useKeyboardShortcuts } from '../hooks/useKeyboardShortcuts';
-import { PostCardSkeleton, PostGridSkeleton, ProfileCardSkeleton, StatsCardSkeleton } from '../components/ui/Skeleton';
+import { useBookmarks } from '../hooks/useBookmarks';
+import { PostCardSkeleton, ProfileCardSkeleton, StatsCardSkeleton, BookmarkButton, BookmarksList } from '../components/ui';
 import { EmptyState } from '../components/ui/EmptyState';
 import { HighlightText } from '../components/ui/SearchHighlight';
 
@@ -31,9 +32,11 @@ export default function Repository() {
   const [totalLikes, setTotalLikes] = useState(0);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [searchInputFocused, setSearchInputFocused] = useState(false);
+  const [showBookmarks, setShowBookmarks] = useState(false);
 
   const { toast } = useToast();
   const { t } = useLanguage();
+  const { bookmarks, toggleBookmark, isBookmarked, removeBookmark, clearBookmarks } = useBookmarks();
   
   const debouncedSearchQuery = useDebounce(searchQuery, 300);
 
@@ -222,6 +225,8 @@ export default function Repository() {
 
     if (activeTab === 'Drafts') {
         filtered = filtered.filter(p => p.status === 'draft');
+    } else if (activeTab === 'Bookmarks') {
+        filtered = filtered.filter(p => isBookmarked(p.id));
     } else if (activeTab !== 'All') {
         filtered = filtered.filter(p => p.category === activeTab || p.subcategory === activeTab);
     }
@@ -236,7 +241,7 @@ export default function Repository() {
       );
     }
     setFilteredPosts(filtered);
-  }, [debouncedSearchQuery, posts, isAdmin, loading, activeTab]);
+  }, [debouncedSearchQuery, posts, isAdmin, loading, activeTab, isBookmarked]);
 
   const stats = {
     total: posts.length,
@@ -251,7 +256,14 @@ export default function Repository() {
       { id: 'Penelitian', label: t('repo.tabs.research'), icon: Microscope },
       { id: 'Bahasan', label: t('repo.tabs.discussion'), icon: MessageSquareQuote }
   ];
-  if (isAdmin) tabs.push({ id: 'Drafts', label: t('repo.tabs.drafts'), icon: Archive });
+  
+  if (isAdmin) {
+    tabs.push({ id: 'Drafts', label: t('repo.tabs.drafts'), icon: Archive });
+  }
+  
+  if (bookmarks.length > 0) {
+    tabs.push({ id: 'Bookmarks', label: 'Bookmarks', icon: Bookmark });
+  }
 
   if (loading) {
     return (
@@ -308,12 +320,25 @@ export default function Repository() {
                     </p>
                 </div>
                 
-                {isAdmin && (
-                    <Link to="/editor/new" className="flex items-center gap-2 px-6 py-4 rounded-full bg-primary text-primary-foreground font-bold hover:opacity-90 transition-all group shrink-0 shadow-sm">
-                        <Plus size={20} className="group-hover:rotate-90 transition-transform" aria-hidden="true" /> 
-                        {t('repo.newEntry')}
-                    </Link>
-                )}
+                <div className="flex items-center gap-3">
+                  {bookmarks.length > 0 && (
+                    <button 
+                      onClick={() => setShowBookmarks(true)}
+                      className="flex items-center gap-2 px-5 py-3 rounded-full bg-secondary text-foreground font-bold hover:bg-primary/10 transition-all group shadow-sm border border-border"
+                      aria-label={`View ${bookmarks.length} bookmarks`}
+                    >
+                      <Bookmark size={18} className="text-primary group-hover:scale-110 transition-transform" aria-hidden="true" />
+                      <span className="text-sm">{bookmarks.length}</span>
+                    </button>
+                  )}
+                  
+                  {isAdmin && (
+                      <Link to="/editor/new" className="flex items-center gap-2 px-6 py-4 rounded-full bg-primary text-primary-foreground font-bold hover:opacity-90 transition-all group shrink-0 shadow-sm">
+                          <Plus size={20} className="group-hover:rotate-90 transition-transform" aria-hidden="true" /> 
+                          {t('repo.newEntry')}
+                      </Link>
+                  )}
+                </div>
             </div>
 
             <div className="bg-card/80 backdrop-blur-xl border border-border/60 rounded-[2rem] md:rounded-full p-2 shadow-sm flex flex-col md:flex-row gap-3 justify-between items-center sticky top-[6.5rem] z-30 transition-all">
@@ -398,6 +423,7 @@ export default function Repository() {
                     {filteredPosts.map((post, index) => {
                         const isExpanded = expandedPosts.has(post.id);
                         const readTime = calculateReadingTime(post.content);
+                        const postIsBookmarked = isBookmarked(post.id);
 
                         return (
                         <motion.article
@@ -516,6 +542,17 @@ export default function Repository() {
                                                 </div>
                                                 
                                                 <div className="flex items-center gap-2">
+                                                    <BookmarkButton
+                                                      isBookmarked={postIsBookmarked}
+                                                      onToggle={() => toggleBookmark({
+                                                        id: post.id,
+                                                        title: post.title,
+                                                        excerpt: post.excerpt,
+                                                        category: post.category
+                                                      })}
+                                                      size="sm"
+                                                    />
+                                                    
                                                     <button 
                                                         onClick={(e) => handleCopyLink(e, post.id)}
                                                         className="p-2 rounded-full bg-secondary text-muted-foreground hover:bg-primary/10 hover:text-primary transition-colors"
@@ -584,11 +621,11 @@ export default function Repository() {
                 {filteredPosts.length === 0 && (
                     <div className="col-span-full">
                         <EmptyState 
-                            icon={Filter}
-                            title={t('repo.noEntries')}
-                            description="Try adjusting your search or filter criteria"
+                            icon={activeTab === 'Bookmarks' ? Bookmark : Filter}
+                            title={activeTab === 'Bookmarks' ? 'No bookmarks yet' : t('repo.noEntries')}
+                            description={activeTab === 'Bookmarks' ? 'Save posts to read later by clicking the bookmark icon.' : 'Try adjusting your search or filter criteria'}
                             action={
-                                isAdmin ? (
+                                isAdmin && activeTab !== 'Bookmarks' ? (
                                     <Link to="/editor/new" className="text-primary text-sm font-bold hover:underline">
                                         {t('repo.newEntry')}
                                     </Link>
@@ -707,6 +744,14 @@ export default function Repository() {
             
         </aside>
       </div>
+
+      <BookmarksList
+        bookmarks={bookmarks}
+        onRemove={removeBookmark}
+        onClear={clearBookmarks}
+        isOpen={showBookmarks}
+        onClose={() => setShowBookmarks(false)}
+      />
     </div>
   );
 }

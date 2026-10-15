@@ -1,13 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { LogOut, PenTool, Sun, Moon, Feather, Settings2, RefreshCw, Languages, Search, X } from 'lucide-react';
+import { LogOut, PenTool, Sun, Moon, Feather, Settings2, RefreshCw, Languages, Search, X, Bookmark } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useTheme } from '../lib/theme';
 import { usePreferences } from '../lib/preferences';
 import { useLanguage } from '../lib/language';
 import { cn } from '../lib/utils';
 import { useKeyboardShortcuts } from '../hooks/useKeyboardShortcuts';
+import { useBookmarks } from '../hooks/useBookmarks';
 
 export default function Navbar() {
   const [showFontSettings, setShowFontSettings] = useState(false);
@@ -18,6 +19,7 @@ export default function Navbar() {
   const { theme, setTheme } = useTheme();
   const { fontSize, setFontSize } = usePreferences();
   const { language, setLanguage, t } = useLanguage();
+  const { bookmarkCount } = useBookmarks();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -136,6 +138,17 @@ export default function Navbar() {
           <div className="hidden md:flex items-center gap-2 shrink-0">
             <div className="flex items-center gap-2 relative">
                 
+                {bookmarkCount > 0 && (
+                  <Link 
+                    to="/?tab=Bookmarks"
+                    className="p-2.5 rounded-full bg-secondary/80 hover:bg-secondary text-muted-foreground hover:text-primary transition-colors flex items-center gap-1.5"
+                    aria-label={`View ${bookmarkCount} bookmarks`}
+                  >
+                    <Bookmark size={18} aria-hidden="true" />
+                    <span className="text-xs font-bold">{bookmarkCount}</span>
+                  </Link>
+                )}
+
                 <button 
                   onClick={() => setShowSearch(true)}
                   className="p-2.5 rounded-full bg-secondary/80 hover:bg-secondary text-muted-foreground hover:text-foreground transition-colors"
@@ -270,6 +283,16 @@ export default function Navbar() {
           </div>
 
           <div className="flex items-center gap-2 md:hidden z-50 shrink-0 relative">
+             {bookmarkCount > 0 && (
+               <Link 
+                 to="/?tab=Bookmarks"
+                 className="p-2 bg-secondary/80 text-muted-foreground hover:text-primary rounded-full transition-colors flex items-center gap-1"
+                 aria-label={`View ${bookmarkCount} bookmarks`}
+               >
+                 <Bookmark size={16} aria-hidden="true" />
+                 <span className="text-xs font-bold">{bookmarkCount}</span>
+               </Link>
+             )}
              <button 
                 onClick={() => setShowSearch(true)}
                 className="p-2 bg-secondary/80 text-muted-foreground hover:text-foreground rounded-full transition-colors"

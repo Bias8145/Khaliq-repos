@@ -3,7 +3,6 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import ScrollToTop from './components/ScrollToTop';
-import AIAssistant from './components/AIAssistant';
 import { supabase } from './lib/supabase';
 import { ToastProvider } from './components/ui/Toast';
 import { NetworkStatus } from './components/ui/NetworkStatus';
@@ -52,7 +51,6 @@ function App() {
             </main>
             <Footer />
             <ScrollToTop />
-            <AIAssistant />
           </div>
         </EnhancedErrorBoundary>
       </Router>
