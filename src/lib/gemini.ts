@@ -1,6 +1,5 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
-// Initialize Gemini
 const API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
 
 export const SYSTEM_PROMPT = `
@@ -28,19 +27,19 @@ IMPORTANT:
 - Keep answers relatively short (under 3 paragraphs) unless asked for details.
 `;
 
-export async function generateAIResponse(prompt: string, context?: string) {
-  // 1. Validate Key
-  if (!API_KEY || API_KEY.includes("YOUR_API_KEY")) {
-    console.error("Gemini: Invalid API Key");
-    return "AI Configuration Error: Please check the VITE_GEMINI_API_KEY in your .env file.";
+export async function generateAIResponse(prompt: string, context?: string): Promise<string> {
+  if (!API_KEY) {
+    console.error("Gemini: API Key not found in environment variables");
+    return "AI Configuration Error: API key not configured. Please add VITE_GEMINI_API_KEY to your .env file.";
+  }
+
+  if (API_KEY.includes("YOUR_API_KEY") || API_KEY.length < 10) {
+    console.error("Gemini: Invalid API Key format");
+    return "AI Configuration Error: The API key appears to be invalid. Please check your VITE_GEMINI_API_KEY in the .env file.";
   }
 
   try {
-    // 2. Initialize Client per request to ensure freshness
     const genAI = new GoogleGenerativeAI(API_KEY);
-    
-    // 3. Use 'gemini-1.5-flash' (Fast & Efficient)
-    // If this fails, you might need to enable the API in Google Cloud Console
     const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
     const fullPrompt = `
@@ -53,21 +52,62 @@ export async function generateAIResponse(prompt: string, context?: string) {
 
     const result = await model.generateContent(fullPrompt);
     const response = await result.response;
-    return response.text();
-  } catch (error: any) {
+    const text = response.text();
+    
+    if (!text || text.trim() === '') {
+      return "I apologize, but I couldn't generate a response. Please try again.";
+    }
+    
+    return text;
+  } catch (error: unknown) {
     console.error("Gemini API Error:", error);
     
-    // Detailed Error Handling
-    if (error.message?.includes("API key")) {
-        return "Error: The provided API Key is invalid or expired.";
-    }
-    if (error.message?.includes("fetch failed")) {
-        return "Network Error: Could not connect to Google AI. Please check your internet connection.";
-    }
-    if (error.message?.includes("candidate")) {
-        return "I apologize, but I cannot answer that specific query due to safety filters.";
+    const err = error as { 
+      message?: string; 
+      status?: number; 
+      statusText?: string;
+      error?: { message?: string };
+      response?: { status?: number };
+    };
+    
+    const errorMessage = err?.message || err?.error?.message || '';
+    const status = err?.status || err?.response?.status;
+    
+    if (errorMessage.includes("API_KEY_INVALID") || errorMessage.includes("API key") || status === 400) {
+      return "Error: The API key is invalid. Please verify your Gemini API key in the Google Cloud Console.";
     }
     
-    return "I apologize, but I am currently unable to process your request. Please try again later.";
+    if (status === 401 || status === 403) {
+      return "Error: Access denied. Please check if your API key has the correct permissions.";
+    }
+    
+    if (errorMessage.includes("fetch") || errorMessage.includes("network") || errorMessage.includes("Failed to fetch")) {
+      return "Network Error: Could not connect to Google AI. Please check your internet connection.";
+    }
+    
+    if (errorMessage.includes("quota") || errorMessage.includes("RESOURCE_EXHAUSTED") || status === 429) {
+      return "Rate Limit: You've reached the API quota limit. Please wait a moment and try again.";
+    }
+    
+    if (errorMessage.includes("SAFETY") || errorMessage.includes("safety") || errorMessage.includes("blocked")) {
+      return "I apologize, but I cannot answer that specific query due to safety filters.";
+    }
+    
+    if (status === 404) {
+      return "Error: The Gemini API endpoint was not found. The model may be temporarily unavailable.";
+    }
+    
+    if (status === 503) {
+      return "Service Unavailable: The Gemini API is temporarily overloaded. Please try again later.";
+    }
+    
+    if (errorMessage.includes("timeout") || errorMessage.includes("Timeout")) {
+      return "Request Timeout: The request took too long. Please try again with a shorter message.";
+    }
+    
+    const detailedError = errorMessage || `Status: ${status || 'Unknown'}`;
+    console.error("Detailed error:", detailedError);
+    
+    return `I apologize, but I encountered an error while processing your request. Please try again later. (Error: ${status || 'Unknown'})`;
   }
 }

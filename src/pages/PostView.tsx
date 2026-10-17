@@ -2,7 +2,7 @@ import React, { useEffect, useState, useRef } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { supabase, type Post } from '../lib/supabase';
 import { format } from 'date-fns';
-import { ArrowLeft, Edit3, Clock, Share2, Heart, Link as LinkIcon, Twitter, Linkedin, MessageCircle, Download, ImageIcon, X, Loader2, Feather, Send, Moon, Sun, RefreshCw, Maximize, Smartphone, Square, Layout, MousePointerClick, TextCursorInput, Globe, Microscope, Book, MessageSquareQuote, FileText, Pin, Maximize2, Minimize2, ShieldCheck, Lock, Eye, Share, Facebook, Mail, Layers, Quote, Plus, Trash2 } from 'lucide-react';
+import { ArrowLeft, Edit3, Clock, Share2, Heart, Link as LinkIcon, Twitter, Linkedin, MessageCircle, Download, ImageIcon, X, Loader2, Feather, Send, Moon, Sun, RefreshCw, Maximize, Smartphone, Square, Layout, MousePointerClick, TextCursorInput, Globe, Microscope, Book, MessageSquareQuote, FileText, Pin, Maximize2, Minimize2, ShieldCheck, Lock, Eye, Share, Facebook, Mail, Layers, Quote, Plus, Trash2, Bookmark } from 'lucide-react';
 import { calculateReadingTime } from '../lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MarkdownRenderer } from '../components/MarkdownRenderer';
@@ -10,6 +10,22 @@ import { useToast } from '../components/ui/Toast';
 import { cn } from '../lib/utils';
 import { useLanguage } from '../lib/language';
 import html2canvas from 'html2canvas';
+import { 
+  useBookmarks, 
+  useContentStats, 
+  useReadingProgress 
+} from '../hooks';
+import {
+  ReadingProgress,
+  ReadingProgressIndicator,
+  ContentStats,
+  BookmarkButton,
+  BookmarksList,
+  EnhancedTableOfContents,
+  ShareButtons,
+  BackToTop,
+  BookmarkIcon
+} from '../components/ui';
 
 type AspectRatio = 'auto' | 'portrait' | 'square' | 'story';
 type CardTheme = 'dark' | 'light';
@@ -20,30 +36,31 @@ export default function PostView() {
   const [post, setPost] = useState<Post | null>(null);
   const [relatedPosts, setRelatedPosts] = useState<Post[]>([]);
   const [canEdit, setCanEdit] = useState(false);
-  const [readingTime, setReadingTime] = useState(0);
   const [showShareMenu, setShowShareMenu] = useState(false);
   const [showVisualShare, setShowVisualShare] = useState(false);
   const [generatingImage, setGeneratingImage] = useState(false);
   const [liked, setLiked] = useState(false);
-  
   const [isFocusMode, setIsFocusMode] = useState(false);
+  const [showBookmarks, setShowBookmarks] = useState(false);
   
-  // Visual Share State
   const [shareMode, setShareMode] = useState<ShareMode>('single');
   const [aspectRatio, setAspectRatio] = useState<AspectRatio>('auto');
   const [cardTheme, setCardTheme] = useState<CardTheme>('light'); 
   const [customExcerpt, setCustomExcerpt] = useState('');
-  
-  // Interactive Carousel State (Array of Slides)
   const [slides, setSlides] = useState<string[]>([]);
-  
   const [isSelectingText, setIsSelectingText] = useState(false);
   
   const { toast } = useToast();
   const { t } = useLanguage();
   
+  const { isBookmarked, toggleBookmark } = useBookmarks();
+  const { progress } = useReadingProgress();
+  
   const singleCardRef = useRef<HTMLDivElement>(null);
   const carouselRefs = useRef<(HTMLDivElement | null)[]>([]);
+
+  const contentStats = useContentStats(post?.content || '');
+  const readingTime = contentStats.readingTime;
 
   useEffect(() => {
     const fetchPost = async () => {
@@ -74,7 +91,6 @@ export default function PostView() {
       
       if (data) {
         setPost(data);
-        setReadingTime(calculateReadingTime(data.content));
         setCustomExcerpt(data.excerpt || data.content.substring(0, 120).replace(/[#*`]/g, '') + "...");
         
         document.title = `${data.title} | Bias Fajar Khaliq`;
@@ -110,7 +126,6 @@ export default function PostView() {
     }
   }, [id]);
 
-  // Auto-populate Carousel Slides on load
   useEffect(() => {
       if (post && slides.length === 0) {
           const paragraphs = post.content
@@ -127,18 +142,6 @@ export default function PostView() {
           setSlides(paragraphs.length > 0 ? paragraphs : ['']);
       }
   }, [post, slides.length]);
-
-  useEffect(() => {
-    if (showVisualShare && !isSelectingText) {
-        const selection = window.getSelection()?.toString().trim();
-        if (selection && selection.length > 0) {
-            if (shareMode === 'single') {
-                setCustomExcerpt(selection);
-            }
-            toast(t('post.tip'), "info");
-        }
-    }
-  }, [showVisualShare, isSelectingText, shareMode]);
 
   const getShareUrl = () => {
     if (!id) return window.location.href;
@@ -361,7 +364,6 @@ export default function PostView() {
     setShowVisualShare(true);
   };
 
-  // Auto-resize textarea handler
   const handleTextareaInput = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
       e.target.style.height = 'auto';
       e.target.style.height = `${e.target.scrollHeight}px`;
@@ -378,6 +380,23 @@ export default function PostView() {
   
   const BackgroundIcon = getCategoryIcon(post?.category);
 
+  const handleBookmarkToggle = () => {
+    if (!post) return;
+    const wasBookmarked = isBookmarked(post.id);
+    toggleBookmark({
+      id: post.id,
+      title: post.title,
+      excerpt: post.excerpt,
+      category: post.category
+    });
+    
+    if (wasBookmarked) {
+      toast("Removed from bookmarks", "info");
+    } else {
+      toast("Added to bookmarks", "success");
+    }
+  };
+
   carouselRefs.current = new Array(slides.length + 2).fill(null);
 
   if (!post) return (
@@ -386,8 +405,12 @@ export default function PostView() {
     </div>
   );
 
+  const postIsBookmarked = isBookmarked(post.id);
+
   return (
     <>
+      <ReadingProgress progress={progress} />
+      
       <div className="min-h-screen pt-28 px-5 md:px-8 max-w-6xl mx-auto pb-48 md:pb-40">
         <Link to="/repo" className="inline-flex items-center gap-2 text-muted-foreground hover:text-primary mb-8 transition-colors group text-sm font-bold bg-secondary px-5 py-2.5 rounded-full no-print border border-border">
           <ArrowLeft size={16} className="group-hover:-translate-x-1 transition-transform" /> {t('post.back')}
@@ -395,7 +418,6 @@ export default function PostView() {
 
         <div className={cn("grid grid-cols-1 gap-10 transition-all duration-500", isFocusMode ? "max-w-4xl mx-auto" : "lg:grid-cols-12")}>
             
-            {/* Main Content */}
             <article className={cn("transition-all duration-500 animate-in fade-in slide-in-from-bottom-4", isFocusMode ? "col-span-1" : "lg:col-span-8")}>
                 <header className="mb-12 relative">
                     
@@ -439,14 +461,27 @@ export default function PostView() {
                             <Book size={14} /> {readingTime} {t('post.readTime')}
                         </span>
                     </div>
+
+                    <div className="mt-6 no-print">
+                      <ContentStats stats={contentStats} compact />
+                    </div>
                 </header>
 
                 <div className="min-h-[300px] mb-16">
                     <MarkdownRenderer content={post.content} />
                 </div>
+
+                <div className="mt-12 pt-8 border-t border-border no-print">
+                  <h3 className="text-sm font-bold text-foreground uppercase tracking-wider mb-4">Share this post</h3>
+                  <ShareButtons 
+                    url={getShareUrl()} 
+                    title={post.title} 
+                    excerpt={post.excerpt}
+                    variant="compact"
+                  />
+                </div>
             </article>
 
-            {/* Sidebar */}
             <aside className={cn("space-y-8 no-print transition-all duration-500", isFocusMode ? "hidden opacity-0" : "lg:col-span-4 opacity-100")}>
                 <div className="sticky top-28 space-y-8">
                     
@@ -482,10 +517,7 @@ export default function PostView() {
                         </div>
                     )}
 
-                    <div className="bg-card border border-border rounded-[2rem] p-6 shadow-sm">
-                        <h3 className="text-sm font-bold text-foreground uppercase tracking-wider mb-4">{t('post.onThisPage')}</h3>
-                        <TableOfContents content={post.content} />
-                    </div>
+                    <EnhancedTableOfContents content={post.content} />
 
                     {relatedPosts.length > 0 && (
                         <div className="bg-card border border-border rounded-[2rem] p-6 shadow-sm">
@@ -504,7 +536,6 @@ export default function PostView() {
             </aside>
         </div>
 
-        {/* Floating Action Bar */}
         <AnimatePresence>
             {!isSelectingText && (
                 <div className="fixed bottom-6 md:bottom-10 inset-x-0 z-[80] flex justify-center pointer-events-none px-4 no-print">
@@ -525,6 +556,12 @@ export default function PostView() {
                             <Heart size={20} className={cn(liked && "fill-current")} />
                             <span>{post.likes}</span>
                         </button>
+                        
+                        <BookmarkIcon
+                          isBookmarked={postIsBookmarked}
+                          onClick={handleBookmarkToggle}
+                          size={20}
+                        />
                         
                         <div className="w-px h-6 bg-border mx-1 shrink-0" />
                         
@@ -564,7 +601,14 @@ export default function PostView() {
             )}
         </AnimatePresence>
 
-        {/* Share Menu Dropdown with Blur Backdrop */}
+        <BookmarksList
+          bookmarks={[]}
+          onRemove={() => {}}
+          onClear={() => {}}
+          isOpen={showBookmarks}
+          onClose={() => setShowBookmarks(false)}
+        />
+
         <AnimatePresence>
             {showShareMenu && (
                 <>
@@ -641,7 +685,6 @@ export default function PostView() {
             )}
         </AnimatePresence>
 
-        {/* Selection Mode Floating Bar */}
         <AnimatePresence>
             {isSelectingText && (
                 <div className="fixed bottom-8 md:bottom-10 inset-x-0 z-[100] flex justify-center pointer-events-none px-4">
@@ -675,7 +718,6 @@ export default function PostView() {
             )}
         </AnimatePresence>
 
-        {/* Visual Share Modal */}
         <AnimatePresence>
             {showVisualShare && (
                 <motion.div 
@@ -686,7 +728,6 @@ export default function PostView() {
                 >
                     <div className="relative w-full max-w-4xl flex flex-col items-center my-auto py-8">
                         
-                        {/* Mode Switcher */}
                         <div className="flex bg-card/80 backdrop-blur-xl rounded-full p-1 border border-border/50 mb-6 shadow-sm">
                             <button 
                                 onClick={() => setShareMode('single')}
@@ -702,13 +743,10 @@ export default function PostView() {
                             </button>
                         </div>
 
-                        {/* Controls Panel */}
                         <div className="w-full max-w-3xl bg-card/90 backdrop-blur-xl border border-border/50 rounded-[2.5rem] p-6 mb-6 shadow-md space-y-6">
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 
-                                {/* Left Column: Settings */}
                                 <div className="space-y-6">
-                                    {/* Size Selector */}
                                     <div className="space-y-3">
                                         <span className="text-xs font-bold uppercase text-muted-foreground flex items-center gap-2">
                                             <Maximize size={14} /> {t('post.cardSize')}
@@ -729,7 +767,6 @@ export default function PostView() {
                                         </div>
                                     </div>
 
-                                    {/* Theme Selector */}
                                     <div className="space-y-3">
                                         <span className="text-xs font-bold uppercase text-muted-foreground flex items-center gap-2">
                                             <Sun size={14} /> {t('post.cardTheme')}
@@ -750,7 +787,6 @@ export default function PostView() {
                                         </div>
                                     </div>
 
-                                    {/* Add from Selection */}
                                     <button 
                                         onClick={startSelectionMode}
                                         className="w-full py-3 rounded-xl bg-primary/10 text-primary font-bold text-xs flex items-center justify-center gap-2 hover:bg-primary/20 transition-colors border border-primary/20"
@@ -759,7 +795,6 @@ export default function PostView() {
                                     </button>
                                 </div>
 
-                                {/* Right Column: Text Editor */}
                                 <div>
                                     {shareMode === 'single' ? (
                                         <div className="space-y-3 h-full flex flex-col">
@@ -793,7 +828,6 @@ export default function PostView() {
                                                 </span>
                                             </div>
                                             
-                                            {/* Scrollable list of individual slide cards */}
                                             <div className="flex-grow overflow-y-auto space-y-3 pr-2 custom-scrollbar">
                                                 <AnimatePresence>
                                                     {slides.map((slide, index) => (
@@ -844,9 +878,7 @@ export default function PostView() {
                             </div>
                         </div>
 
-                        {/* PREVIEW AREA */}
                         {shareMode === 'single' ? (
-                            // SINGLE CARD PREVIEW
                             <div className="w-full max-w-3xl flex justify-center mb-8">
                                 <div ref={singleCardRef} style={{ backgroundColor: 'transparent' }}>
                                     <div 
@@ -854,7 +886,7 @@ export default function PostView() {
                                             "relative w-[380px] md:w-[600px] flex flex-col justify-between overflow-hidden transition-colors duration-300",
                                             aspectRatio === 'square' ? "aspect-square" : 
                                             aspectRatio === 'portrait' ? "aspect-[4/5]" : 
-                                            aspectRatio === 'story' ? "aspect-[9/16]" : 
+                                            aspectRatio === 'story' ? "aspect-[9:16]" : 
                                             "min-h-[500px] h-auto",
                                             cardTheme === 'dark' ? "bg-[#141414] text-[#E5E5E5]" : "bg-[#FAFAFA] text-[#1A1A1A]"
                                         )}
@@ -870,7 +902,6 @@ export default function PostView() {
                                             <BackgroundIcon size={400} className={cn("rotate-[-10deg]", cardTheme === 'dark' ? "text-white" : "text-black")} />
                                         </div>
                                         
-                                        {/* Header */}
                                         <div className="relative z-10 flex items-center gap-4 mb-10">
                                             <div className={cn(
                                                 "w-12 h-12 rounded-full border flex items-center justify-center shrink-0",
@@ -888,7 +919,6 @@ export default function PostView() {
                                             </div>
                                         </div>
 
-                                        {/* Main Content */}
                                         <div className="relative z-10 flex-grow flex flex-col justify-center mb-10 w-full">
                                             <h2 className={cn(
                                                 "text-3xl md:text-4xl font-bold tracking-tight mb-8 leading-[1.2]", 
@@ -911,7 +941,6 @@ export default function PostView() {
                                             </div>
                                         </div>
 
-                                        {/* Footer */}
                                         <div className={cn(
                                             "relative z-10 pt-6 border-t flex items-end justify-between w-full", 
                                             cardTheme === 'dark' ? "border-[#2E2E2E]" : "border-[#E0E0E0]"
@@ -933,7 +962,7 @@ export default function PostView() {
                                                     {format(new Date(post.created_at), 'MMMM d, yyyy')}
                                                 </p>
                                                 <p className={cn("text-sm font-bold", cardTheme === 'dark' ? "text-[#C4B59D]" : "text-[#A99370]")} style={{ fontFamily: 'sans-serif' }}>
-                                                    {post.category || 'Bahasan'} • {readingTime} min read
+                                                    {post.category || 'Bahasan'} - {readingTime} min read
                                                 </p>
                                             </div>
                                         </div>
@@ -941,16 +970,14 @@ export default function PostView() {
                                 </div>
                             </div>
                         ) : (
-                            // CAROUSEL PREVIEW
                             <div className="w-full overflow-x-auto pb-8 no-scrollbar flex items-start gap-6 snap-x snap-mandatory px-4 md:px-0">
-                                {/* Slide 1: Cover */}
                                 <div ref={(el) => { if (el) carouselRefs.current[0] = el; }} className="shrink-0 snap-center" style={{ backgroundColor: 'transparent' }}>
                                     <div 
                                         className={cn(
                                             "w-[340px] md:w-[400px] relative flex flex-col justify-between overflow-hidden",
                                             aspectRatio === 'square' ? "aspect-square" : 
                                             aspectRatio === 'portrait' ? "aspect-[4/5]" : 
-                                            aspectRatio === 'story' ? "aspect-[9/16]" : 
+                                            aspectRatio === 'story' ? "aspect-[9:16]" : 
                                             "min-h-[500px] h-auto",
                                             cardTheme === 'dark' ? "bg-[#141414] text-[#E5E5E5]" : "bg-[#FAFAFA] text-[#1A1A1A]"
                                         )}
@@ -996,15 +1023,14 @@ export default function PostView() {
                                     </div>
                                 </div>
 
-                                {/* Slide 2..N: Content Chunks */}
                                 {slides.map((slideText, index) => (
                                     <div key={index} ref={(el) => { if(el) carouselRefs.current[index + 1] = el; }} className="shrink-0 snap-center" style={{ backgroundColor: 'transparent' }}>
                                         <div 
                                             className={cn(
                                                 "w-[340px] md:w-[400px] relative flex flex-col overflow-hidden",
                                                 aspectRatio === 'square' ? "aspect-square" : 
-                                                aspectRatio === 'portrait' ? "aspect-[4/5]" : 
-                                                aspectRatio === 'story' ? "aspect-[9/16]" : 
+                                                aspectRatio === 'portrait' ? "aspect-[4:5]" : 
+                                                aspectRatio === 'story' ? "aspect-[9:16]" : 
                                                 "min-h-[500px] h-auto",
                                                 cardTheme === 'dark' ? "bg-[#141414] text-[#E5E5E5]" : "bg-[#FAFAFA] text-[#1A1A1A]"
                                             )}
@@ -1034,14 +1060,13 @@ export default function PostView() {
                                     </div>
                                 ))}
 
-                                {/* Slide N+1: Outro */}
                                 <div ref={(el) => { if(el) carouselRefs.current[slides.length + 1] = el; }} className="shrink-0 snap-center" style={{ backgroundColor: 'transparent' }}>
                                     <div 
                                         className={cn(
                                             "w-[340px] md:w-[400px] relative flex flex-col justify-center items-center text-center overflow-hidden",
                                             aspectRatio === 'square' ? "aspect-square" : 
-                                            aspectRatio === 'portrait' ? "aspect-[4/5]" : 
-                                            aspectRatio === 'story' ? "aspect-[9/16]" : 
+                                            aspectRatio === 'portrait' ? "aspect-[4:5]" : 
+                                            aspectRatio === 'story' ? "aspect-[9:16]" : 
                                             "min-h-[500px] h-auto",
                                             cardTheme === 'dark' ? "bg-[#141414] text-[#E5E5E5]" : "bg-[#FAFAFA] text-[#1A1A1A]"
                                         )}
@@ -1080,7 +1105,6 @@ export default function PostView() {
                             </div>
                         )}
 
-                        {/* Action Buttons */}
                         <div className="flex flex-col md:flex-row gap-4 w-full justify-center">
                             {shareMode === 'single' && (
                                 <button 
@@ -1115,6 +1139,9 @@ export default function PostView() {
             )}
         </AnimatePresence>
       </div>
+
+      <ReadingProgressIndicator progress={progress} />
+      <BackToTop />
     </>
   );
 }

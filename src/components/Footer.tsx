@@ -7,12 +7,11 @@ export default function Footer() {
   const { t } = useLanguage();
 
   return (
-    <footer className="bg-card pt-12 pb-8 mt-auto rounded-t-[40px] border-t border-border relative z-10 mx-0 md:mx-0">
+    <footer className="bg-card pt-12 pb-8 mt-auto border-t border-border relative z-10">
       <div className="max-w-6xl mx-auto px-6">
         
         <div className="grid grid-cols-1 md:grid-cols-12 gap-8 md:gap-12 mb-10">
           
-          {/* Brand Column */}
           <div className="md:col-span-5 space-y-4">
             <div>
                 <Link to="/" className="text-lg font-bold text-foreground tracking-tight block mb-3 flex items-center gap-2">
@@ -33,7 +32,6 @@ export default function Footer() {
             </div>
           </div>
 
-          {/* Navigation Column */}
           <div className="md:col-span-3">
             <h4 className="text-[10px] font-bold text-primary uppercase tracking-widest mb-4">{t('footer.nav')}</h4>
             <ul className="space-y-2">
@@ -43,7 +41,6 @@ export default function Footer() {
             </ul>
           </div>
 
-          {/* Info Column */}
           <div className="md:col-span-4">
             <h4 className="text-[10px] font-bold text-primary uppercase tracking-widest mb-4">{t('footer.location')}</h4>
             <div className="space-y-3">

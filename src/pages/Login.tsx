@@ -13,7 +13,6 @@ export default function Login() {
   const navigate = useNavigate();
   const { t } = useLanguage();
 
-  // Default mapping for convenience, but allow override
   const DEFAULT_DOMAIN = '@khaliq-repos.pages.dev';
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -47,7 +46,7 @@ export default function Login() {
         throw error;
       }
       
-      navigate('/repo');
+      navigate('/');
     } catch (err: any) {
       console.error(err);
       setError(err.message);
@@ -104,7 +103,7 @@ export default function Login() {
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
                             className="w-full bg-secondary border border-transparent focus:border-primary rounded-xl py-3 pl-10 pr-4 text-sm transition-all outline-none font-medium"
-                            placeholder="••••••••"
+                            placeholder="********"
                             required
                         />
                     </div>
